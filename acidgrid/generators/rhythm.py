@@ -6,18 +6,68 @@ from typing import List, Tuple
 
 class RhythmGenerator:
     """Generates rhythm tracks with dynamic velocity curves and song structure awareness."""
-    
-    # MIDI note numbers for drum sounds
-    BASS_DRUM = 36      # C2
-    SNARE_DRUM = 38     # D2
-    CLAP = 39           # D#2
-    LOW_TOM = 41        # F2
-    MID_TOM = 43        # G2
-    HIGH_TOM = 45       # A2
-    HI_HAT = 42         # F#2
-    OPEN_HI_HAT = 46    # A#2
-    CRASH = 49          # C#3
-    RIDE = 51           # D#3
+
+    # MIDI note numbers for drum sounds - Standard GM Drum Map
+    # Kicks and Snares
+    BASS_DRUM = 36      # C2 - Acoustic Bass Drum
+    BASS_DRUM_2 = 35    # B1 - Acoustic Bass Drum (alternative)
+    SNARE_DRUM = 38     # D2 - Acoustic Snare
+    SNARE_DRUM_2 = 40   # E2 - Electric Snare
+    CLAP = 39           # D#2 - Hand Clap
+    SIDE_STICK = 37     # C#2 - Side Stick / Rimshot
+
+    # Toms
+    LOW_TOM = 41        # F2 - Low Floor Tom
+    LOW_TOM_2 = 43      # G2 - High Floor Tom
+    MID_TOM = 47        # B2 - Low-Mid Tom
+    MID_TOM_2 = 48      # C3 - Hi-Mid Tom
+    HIGH_TOM = 50       # D3 - High Tom
+    HIGH_TOM_2 = 45     # A2 - Low Tom (another variant)
+
+    # Hi-hats
+    HI_HAT = 42         # F#2 - Closed Hi-Hat
+    PEDAL_HI_HAT = 44   # G#2 - Pedal Hi-Hat
+    OPEN_HI_HAT = 46    # A#2 - Open Hi-Hat
+
+    # Cymbals
+    CRASH = 49          # C#3 - Crash Cymbal 1
+    CRASH_2 = 57        # A3 - Crash Cymbal 2
+    SPLASH = 55         # G3 - Splash Cymbal
+    RIDE = 51           # D#3 - Ride Cymbal 1
+    RIDE_BELL = 53      # F3 - Ride Bell
+    CHINA = 52          # E3 - Chinese Cymbal
+
+    # Latin Percussion
+    COWBELL = 56        # G#3 - Cowbell
+    TAMBOURINE = 54     # F#3 - Tambourine
+    VIBRASLAP = 58      # A#3 - Vibraslap
+    HIGH_BONGO = 60     # C4 - Hi Bongo
+    LOW_BONGO = 61      # C#4 - Low Bongo
+    MUTE_HI_CONGA = 62  # D4 - Mute Hi Conga
+    OPEN_HI_CONGA = 63  # D#4 - Open Hi Conga
+    LOW_CONGA = 64      # E4 - Low Conga
+    HIGH_TIMBALE = 65   # F4 - High Timbale
+    LOW_TIMBALE = 66    # F#4 - Low Timbale
+    HIGH_AGOGO = 67     # G4 - High Agogo
+    LOW_AGOGO = 68      # G#4 - Low Agogo
+    CABASA = 69         # A4 - Cabasa
+    MARACAS = 70        # A#4 - Maracas
+
+    # Whistles and Effects
+    SHORT_WHISTLE = 71  # B4 - Short Whistle
+    LONG_WHISTLE = 72   # C5 - Long Whistle
+    SHORT_GUIRO = 73    # C#5 - Short Guiro
+    LONG_GUIRO = 74     # D5 - Long Guiro
+    CLAVES = 75         # D#5 - Claves
+    HI_WOOD_BLOCK = 76  # E5 - Hi Wood Block
+    LOW_WOOD_BLOCK = 77 # F5 - Low Wood Block
+
+    # Electronic/808 sounds
+    MUTE_CUICA = 78     # F#5 - Mute Cuica
+    OPEN_CUICA = 79     # G5 - Open Cuica
+    MUTE_TRIANGLE = 80  # G#5 - Mute Triangle
+    OPEN_TRIANGLE = 81  # A5 - Open Triangle
+    SHAKER = 82         # A#5 - Shaker (often mapped here in modern kits)
     
     def __init__(self, song_structure=None, style=None):
         self.song_structure = song_structure
@@ -33,21 +83,30 @@ class RhythmGenerator:
                 "sd": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
                 "clap": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                 "hh": [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-                "oh": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                "oh": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                "shaker": [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+                "rim": [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             },
             "driving": {
                 "bd": [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
                 "sd": [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
                 "clap": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
                 "hh": [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
-                "oh": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                "oh": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                "shaker": [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+                "tambourine": [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                "ride": [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
             },
             "complex": {
                 "bd": [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0],
                 "sd": [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
                 "clap": [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
                 "hh": [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
-                "oh": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+                "oh": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1],
+                "shaker": [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1],
+                "cowbell": [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                "rim": [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+                "pedal_hh": [0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 0],
             },
             "breakbeat": {
                 "bd": [1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0],
@@ -55,6 +114,10 @@ class RhythmGenerator:
                 "clap": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
                 "hh": [1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1],
                 "oh": [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                "shaker": [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+                "tambourine": [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                "ride": [1, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0],
+                "crash": [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             },
             "rolling": {
                 "bd": [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
@@ -62,6 +125,10 @@ class RhythmGenerator:
                 "clap": [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
                 "hh": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
                 "oh": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                "shaker": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                "tambourine": [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
+                "cowbell": [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0],
+                "ride_bell": [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
             }
         }
     
@@ -218,7 +285,7 @@ class RhythmGenerator:
             for i in range(12, 16):
                 pattern["hh"][i] = 0
                 pattern["oh"][i] = 0
-            
+
             # Add tom roll
             if random.random() < 0.7:
                 pattern["high_tom"] = [0]*12 + [1, 0, 0, 0]
@@ -229,41 +296,157 @@ class RhythmGenerator:
             pattern["high_tom"] = [0] * 16
             pattern["mid_tom"] = [0] * 16
             pattern["low_tom"] = [0] * 16
-            
+
             if measure % 2 == 0 and random.random() < 0.3:
                 # Tom question
                 pattern["low_tom"][4] = 1
                 pattern["mid_tom"][6] = 1
                 pattern["high_tom"][7] = 1
+
+        # Add style-specific percussion layers
+        self._add_style_percussion(pattern, measure, intensity)
+
+    def _add_style_percussion(self, pattern, measure, intensity):
+        """Add style-specific percussion layers."""
+        if not self.style:
+            return
+
+        style_name = self.style.name if hasattr(self.style, 'name') else 'techno'
+
+        # House: Latin percussion, congas, bongos
+        if style_name == 'house':
+            if measure % 2 == 0 and random.random() < 0.6:
+                pattern["conga_low"] = [0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0]
+                pattern["conga_high"] = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+            if random.random() < 0.4:
+                pattern["bongo_hi"] = [0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+                pattern["bongo_low"] = [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0]
+            if random.random() < 0.5:
+                pattern["claves"] = [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+
+        # Techno: Industrial sounds, minimal percussion
+        elif style_name == 'techno':
+            if random.random() < 0.3:
+                pattern["cowbell"] = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+            if measure % 4 == 3 and random.random() < 0.4:
+                pattern["wood_block"] = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+
+        # Hard-tekno: Maximum percussion density
+        elif style_name == 'hard-tekno':
+            pattern["cowbell"] = [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0]
+            if random.random() < 0.6:
+                pattern["wood_block"] = [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
+            if intensity > 0.7:
+                pattern["claves"] = [0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1]
+
+        # Breakbeat: Funky percussion
+        elif style_name == 'breakbeat':
+            if random.random() < 0.5:
+                pattern["cowbell"] = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0]
+            if random.random() < 0.4:
+                pattern["conga_high"] = [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
+
+        # IDM: Glitchy, randomized percussion
+        elif style_name == 'idm':
+            if random.random() < 0.5:
+                # Random glitchy percussion
+                pattern["wood_block"] = [random.randint(0, 1) for _ in range(16)]
+                pattern["claves"] = [random.randint(0, 1) if random.random() < 0.3 else 0 for _ in range(16)]
+
+        # Jungle/DnB: Massive percussion density
+        elif style_name in ['jungle', 'drum&bass']:
+            if random.random() < 0.7:
+                pattern["conga_low"] = [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0]
+                pattern["conga_high"] = [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0]
+            if random.random() < 0.5:
+                pattern["agogo_hi"] = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]
+                pattern["agogo_low"] = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0]
+
+        # Hip-hop: Minimal, boom bap style
+        elif style_name == 'hip-hop':
+            if measure % 4 == 0 and random.random() < 0.3:
+                pattern["cowbell"] = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        # Trap: Hi-hat rolls and minimal percussion
+        elif style_name == 'trap':
+            # Trap hi-hat rolls
+            if measure % 4 == 3 and random.random() < 0.7:
+                # Hi-hat roll in last beat
+                pattern["hh"] = pattern["hh"][:12] + [1, 1, 1, 1]
+            if random.random() < 0.3:
+                pattern["cowbell"] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
+
+        # Ambient: Sparse, atmospheric percussion
+        elif style_name == 'ambient':
+            if random.random() < 0.3:
+                pattern["triangle"] = [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+            if random.random() < 0.2:
+                pattern["chimes"] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
     
     def _generate_drum_hits(self, pattern, step, step_time, intensity, measure):
         """Generate individual drum hits with dynamic velocity."""
         events = []
-        
+
         # Base velocities modified by intensity
         base_velocities = {
-            "bd": 120,      # +10
-            "sd": 105,      # +15
-            "clap": 95,     # +15
-            "hh": 75,       # +15
-            "oh": 85,       # +15
-            "low_tom": 100, # +15
-            "mid_tom": 95,  # +15
-            "high_tom": 90, # +15
+            "bd": 120,
+            "sd": 105,
+            "clap": 95,
+            "hh": 75,
+            "oh": 85,
+            "pedal_hh": 70,
+            "low_tom": 100,
+            "mid_tom": 95,
+            "high_tom": 90,
+            "crash": 110,
+            "ride": 80,
+            "ride_bell": 85,
+            "shaker": 65,
+            "tambourine": 75,
+            "cowbell": 85,
+            "rim": 80,
+            "conga_low": 85,
+            "conga_high": 80,
+            "bongo_hi": 75,
+            "bongo_low": 80,
+            "agogo_hi": 75,
+            "agogo_low": 70,
+            "wood_block": 80,
+            "claves": 85,
+            "triangle": 60,
+            "chimes": 70,
         }
-        
+
         # Velocity curves for different drums
         velocity_curves = {
-            "bd": lambda i, m: 1.0 + (0.2 if step % 4 == 0 else -0.1),  # Accent on beats
-            "sd": lambda i, m: i * 0.8 + 0.4,  # Scale with intensity
+            "bd": lambda i, m: 1.0 + (0.2 if step % 4 == 0 else -0.1),
+            "sd": lambda i, m: i * 0.8 + 0.4,
             "clap": lambda i, m: i * 0.7 + 0.5,
-            "hh": lambda i, m: 0.5 + i * 0.3 + random.uniform(-0.1, 0.1),  # Subtle variation
+            "hh": lambda i, m: 0.5 + i * 0.3 + random.uniform(-0.1, 0.1),
             "oh": lambda i, m: 0.6 + i * 0.2,
+            "pedal_hh": lambda i, m: 0.4 + i * 0.3,
             "low_tom": lambda i, m: 0.8 + i * 0.2,
             "mid_tom": lambda i, m: 0.75 + i * 0.2,
             "high_tom": lambda i, m: 0.7 + i * 0.2,
+            "crash": lambda i, m: 0.9 + i * 0.1,
+            "ride": lambda i, m: 0.6 + i * 0.2,
+            "ride_bell": lambda i, m: 0.7 + i * 0.2,
+            "shaker": lambda i, m: 0.5 + i * 0.2 + random.uniform(-0.1, 0.1),
+            "tambourine": lambda i, m: 0.6 + i * 0.2,
+            "cowbell": lambda i, m: 0.7 + i * 0.2,
+            "rim": lambda i, m: 0.6 + i * 0.2,
+            "conga_low": lambda i, m: 0.7 + i * 0.2,
+            "conga_high": lambda i, m: 0.65 + i * 0.2,
+            "bongo_hi": lambda i, m: 0.6 + i * 0.2,
+            "bongo_low": lambda i, m: 0.65 + i * 0.2,
+            "agogo_hi": lambda i, m: 0.6 + i * 0.2,
+            "agogo_low": lambda i, m: 0.55 + i * 0.2,
+            "wood_block": lambda i, m: 0.65 + i * 0.2,
+            "claves": lambda i, m: 0.7 + i * 0.2,
+            "triangle": lambda i, m: 0.5 + i * 0.1,
+            "chimes": lambda i, m: 0.55 + i * 0.1,
         }
-        
+
         # Map pattern keys to MIDI notes
         drum_map = {
             "bd": self.BASS_DRUM,
@@ -271,9 +454,27 @@ class RhythmGenerator:
             "clap": self.CLAP,
             "hh": self.HI_HAT,
             "oh": self.OPEN_HI_HAT,
+            "pedal_hh": self.PEDAL_HI_HAT,
             "low_tom": self.LOW_TOM,
             "mid_tom": self.MID_TOM,
             "high_tom": self.HIGH_TOM,
+            "crash": self.CRASH,
+            "ride": self.RIDE,
+            "ride_bell": self.RIDE_BELL,
+            "shaker": self.SHAKER,
+            "tambourine": self.TAMBOURINE,
+            "cowbell": self.COWBELL,
+            "rim": self.SIDE_STICK,
+            "conga_low": self.LOW_CONGA,
+            "conga_high": self.OPEN_HI_CONGA,
+            "bongo_hi": self.HIGH_BONGO,
+            "bongo_low": self.LOW_BONGO,
+            "agogo_hi": self.HIGH_AGOGO,
+            "agogo_low": self.LOW_AGOGO,
+            "wood_block": self.HI_WOOD_BLOCK,
+            "claves": self.CLAVES,
+            "triangle": self.OPEN_TRIANGLE,
+            "chimes": self.OPEN_TRIANGLE,  # Using triangle for chimes
         }
         
         for drum_name, midi_note in drum_map.items():
