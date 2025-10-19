@@ -29,7 +29,7 @@ ENV/
 env/
 .venv
 
-# IDE
+# IDEs
 .vscode/
 .idea/
 *.swp
@@ -39,7 +39,24 @@ env/
 # MIDI output files
 output/
 *.mid
+*.midi
 
-# OS
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# AI Assistant files (private - not for repository)
+CLAUDE.md
+.claude/
+
+# Temporary files
+*.log
+*.tmp
+temp/
+tmp/
+
+# OS files
 .DS_Store
 Thumbs.db
