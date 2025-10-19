@@ -82,6 +82,8 @@ Every track gets an authentic name matching its style:
 
 ## 🚀 Installation
 
+### Standard Installation
+
 ```bash
 # Clone the repository
 git clone https://github.com/yrbane/acidgrid.git
@@ -95,6 +97,34 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 pip install -e .
 ```
+
+### 🎹 Ableton Live Integration (Optional)
+
+**Generate MIDI clips directly inside Ableton Live!**
+
+ACIDGRID includes a native Remote Script for seamless Ableton integration:
+
+```bash
+# Install Remote Script
+cd ableton_remote_script
+./install.sh  # macOS/Linux
+
+# Or manually copy
+cp -r ACIDGRID ~/Music/Ableton/User\ Library/Remote\ Scripts/
+```
+
+Then in Ableton:
+1. Preferences → Link/Tempo/MIDI
+2. Control Surface → **ACIDGRID**
+3. Restart Ableton
+
+**Features:**
+- 🎵 Generate clips directly in Ableton tracks
+- 🎛️ MIDI controller mapping (Launchpad/Push compatible)
+- 🎨 Color-coded clips by style
+- ⚡ Instant generation, no file export needed
+
+See **[ableton_remote_script/README.md](ableton_remote_script/README.md)** for full integration guide.
 
 ## 💣 Usage
 
