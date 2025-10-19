@@ -108,9 +108,9 @@ def main():
         output_dir = Path.cwd() / "output"
 
     output_dir.mkdir(parents=True, exist_ok=True)
-    
-    # Generate track name
-    track_name = generate_track_name()
+
+    # Generate track name based on style
+    track_name = generate_track_name(style=style)
     print(f"Generating track: {track_name}")
 
     # Create song structure with style
