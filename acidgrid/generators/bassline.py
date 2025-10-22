@@ -76,6 +76,66 @@ class BasslineGenerator:
                 "notes": [0, 0, 0, 5, 0, 7, 0, 12, 0, 0, 0, 5, 0, 3, 0, 0],
                 "slides": [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
                 "description": "Galloping techno bass"
+            },
+            "syncopated_groove": {
+                "pattern": [1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1],
+                "notes": [0, 0, 0, 7, 5, 0, 3, 0, 0, 12, 0, 7, 5, 0, 0, 0],
+                "slides": [0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+                "description": "Syncopated groove bass"
+            },
+            "stepped_ascent": {
+                "pattern": [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+                "notes": [0, 0, 0, 0, 3, 0, 0, 0, 7, 0, 0, 0, 12, 0, 0, 0],
+                "slides": [0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+                "description": "Stepping ascent"
+            },
+            "broken_eighth": {
+                "pattern": [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0],
+                "notes": [0, 0, 5, 0, 0, 0, 7, 0, 12, 0, 0, 0, 7, 0, 5, 0],
+                "slides": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                "description": "Broken eighth notes"
+            },
+            "tribal_pump": {
+                "pattern": [1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
+                "notes": [0, -5, 0, 7, 0, 5, 0, 0, 0, -7, 0, 3, 0, 0, 5, 0],
+                "slides": [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+                "description": "Tribal pumping bass"
+            },
+            "stutter_bass": {
+                "pattern": [1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1],
+                "notes": [0, 0, 0, 5, 0, 0, 7, 0, 12, 12, 12, 0, 0, 7, 0, 0],
+                "slides": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                "description": "Stuttering bass pattern"
+            },
+            "deep_rumble": {
+                "pattern": [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+                "notes": [-12, 0, 0, 0, 0, 0, 0, 0, -12, 0, 0, 0, 0, 0, -7, 0],
+                "slides": [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+                "description": "Deep minimal rumble"
+            },
+            "octave_jump": {
+                "pattern": [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+                "notes": [0, 0, 12, 0, 0, 0, 12, 0, 7, 0, 19, 0, 5, 0, 17, 0],
+                "slides": [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0],
+                "description": "Octave jumping bass"
+            },
+            "off_grid": {
+                "pattern": [1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 1],
+                "notes": [0, 0, 0, 5, 0, 3, 0, 0, 7, 0, 0, 12, 0, 0, 7, 5],
+                "slides": [0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
+                "description": "Off-grid syncopation"
+            },
+            "ascending_thirds": {
+                "pattern": [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0],
+                "notes": [0, 0, 3, 0, 5, 0, 7, 0, 10, 0, 12, 0, 7, 0, 3, 0],
+                "slides": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+                "description": "Ascending thirds pattern"
+            },
+            "bouncing_bass": {
+                "pattern": [1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0],
+                "notes": [0, 7, 0, 0, 12, 7, 0, 0, 0, 5, 0, 0, 3, 7, 0, 0],
+                "slides": [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+                "description": "Bouncing bass pattern"
             }
         }
     

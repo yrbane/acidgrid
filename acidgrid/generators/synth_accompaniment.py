@@ -126,9 +126,34 @@ class SynthAccompanimentGenerator:
     
     def _choose_pattern_type(self, measure: int) -> str:
         """Choose accompaniment pattern type based on track progression and style."""
-        # Adjust probabilities based on synth_density
+        # Adjust probabilities based on synth_density and style
         synth_density = self.style.synth_density if self.style else 0.7
+        style_name = self.style.name if self.style and hasattr(self.style, 'name') else None
 
+        # Techno loves arpeggios!
+        if style_name == 'techno':
+            if measure < 16:  # Intro
+                return random.choices(
+                    ["arpeggios", "filtered", "sustained", "stabs"],
+                    weights=[0.5, 0.2, 0.2, 0.1]
+                )[0]
+            elif measure < 64:  # Build up
+                return random.choices(
+                    ["arpeggios", "filtered", "stabs", "sustained"],
+                    weights=[0.6, 0.2, 0.15, 0.05]
+                )[0]
+            elif measure < 128:  # Main section - massif d'arpèges
+                return random.choices(
+                    ["arpeggios", "filtered", "stabs"],
+                    weights=[0.7, 0.2, 0.1]
+                )[0]
+            else:  # Outro
+                return random.choices(
+                    ["arpeggios", "filtered", "sustained"],
+                    weights=[0.5, 0.3, 0.2]
+                )[0]
+
+        # Other styles - original behavior with slight tweaks
         if measure < 16:  # Intro - minimal
             if synth_density > 0.8:  # Ambient/IDM - more active even in intro
                 return random.choice(["sustained", "arpeggios", "stabs"])
@@ -172,29 +197,218 @@ class SynthAccompanimentGenerator:
     
     def _create_arpeggio_pattern(self, chord_notes: List[int], start_time: float,
                                beat_duration: float, measure: int, intensity: float) -> List[Tuple[float, int, int]]:
-        """Create arpeggiated pattern."""
+        """Create arpeggiated pattern with multiple variations."""
         events = []
-        
-        # 16th note arpeggios
+
+        # Choose arpeggio variation
+        arp_type = random.choice([
+            "classic_16th",      # Classic 16th note up
+            "classic_down",      # Classic 16th note down
+            "octave_up",         # Up with octave jump
+            "octave_down",       # Down with octave jump
+            "pingpong",          # Up-down pattern
+            "broken",            # Broken chord pattern
+            "triplet",           # Triplet feel
+            "syncopated",        # Syncopated pattern
+            "double_octave",     # Two octave range
+            "sparse",            # Sparse arpeggio
+        ])
+
+        if arp_type == "classic_16th":
+            events = self._arp_classic_16th(chord_notes, start_time, beat_duration, measure, intensity)
+        elif arp_type == "classic_down":
+            events = self._arp_classic_down(chord_notes, start_time, beat_duration, measure, intensity)
+        elif arp_type == "octave_up":
+            events = self._arp_octave_up(chord_notes, start_time, beat_duration, measure, intensity)
+        elif arp_type == "octave_down":
+            events = self._arp_octave_down(chord_notes, start_time, beat_duration, measure, intensity)
+        elif arp_type == "pingpong":
+            events = self._arp_pingpong(chord_notes, start_time, beat_duration, measure, intensity)
+        elif arp_type == "broken":
+            events = self._arp_broken(chord_notes, start_time, beat_duration, measure, intensity)
+        elif arp_type == "triplet":
+            events = self._arp_triplet(chord_notes, start_time, beat_duration, measure, intensity)
+        elif arp_type == "syncopated":
+            events = self._arp_syncopated(chord_notes, start_time, beat_duration, measure, intensity)
+        elif arp_type == "double_octave":
+            events = self._arp_double_octave(chord_notes, start_time, beat_duration, measure, intensity)
+        elif arp_type == "sparse":
+            events = self._arp_sparse(chord_notes, start_time, beat_duration, measure, intensity)
+
+        return events
+
+    def _arp_classic_16th(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Classic ascending 16th note arpeggio."""
+        events = []
         sixteenth_duration = beat_duration / 4
-        
-        # Create arpeggio pattern
-        arp_pattern = chord_notes + [chord_notes[0] + 12]  # Add octave
-        
-        for i in range(16):  # 16 sixteenth notes per measure
-            if random.random() < 0.7:  # 70% probability for each note
+        arp_pattern = chord_notes + [chord_notes[0] + 12]
+
+        for i in range(16):
+            if random.random() < 0.85:
                 note_time = start_time + i * sixteenth_duration
                 note = arp_pattern[i % len(arp_pattern)]
-                base_velocity = random.randint(30, 55)  # Augmenter arpeggios
-                
-                if self.song_structure:
-                    velocity = self.song_structure.get_velocity_curve(measure, base_velocity)
-                else:
-                    velocity = int(base_velocity * intensity)
-                    
+                base_velocity = random.randint(30, 55)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
                 events.append((note_time, note, velocity))
-        
         return events
+
+    def _arp_classic_down(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Classic descending 16th note arpeggio."""
+        events = []
+        sixteenth_duration = beat_duration / 4
+        arp_pattern = list(reversed(chord_notes + [chord_notes[0] + 12]))
+
+        for i in range(16):
+            if random.random() < 0.85:
+                note_time = start_time + i * sixteenth_duration
+                note = arp_pattern[i % len(arp_pattern)]
+                base_velocity = random.randint(30, 55)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
+                events.append((note_time, note, velocity))
+        return events
+
+    def _arp_octave_up(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Arpeggio with octave jumps upward."""
+        events = []
+        sixteenth_duration = beat_duration / 4
+        # Pattern: root, 3rd, 5th, root+octave
+        arp_pattern = chord_notes + [chord_notes[0] + 12]
+
+        for i in range(16):
+            if random.random() < 0.8:
+                note_time = start_time + i * sixteenth_duration
+                idx = i % len(arp_pattern)
+                note = arp_pattern[idx]
+                # Add extra octave jump on beat 3
+                if i >= 8 and i < 12:
+                    note += 12
+                base_velocity = random.randint(35, 60)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
+                events.append((note_time, note, velocity))
+        return events
+
+    def _arp_octave_down(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Arpeggio with octave jumps downward."""
+        events = []
+        sixteenth_duration = beat_duration / 4
+        arp_pattern = [chord_notes[0] + 12] + list(reversed(chord_notes))
+
+        for i in range(16):
+            if random.random() < 0.8:
+                note_time = start_time + i * sixteenth_duration
+                note = arp_pattern[i % len(arp_pattern)]
+                base_velocity = random.randint(35, 60)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
+                events.append((note_time, note, velocity))
+        return events
+
+    def _arp_pingpong(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Up-down ping-pong arpeggio."""
+        events = []
+        sixteenth_duration = beat_duration / 4
+        # Up then down
+        arp_up = chord_notes + [chord_notes[0] + 12]
+        arp_down = list(reversed(chord_notes))
+        arp_pattern = arp_up + arp_down
+
+        for i in range(16):
+            if random.random() < 0.85:
+                note_time = start_time + i * sixteenth_duration
+                note = arp_pattern[i % len(arp_pattern)]
+                base_velocity = random.randint(30, 55)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
+                events.append((note_time, note, velocity))
+        return events
+
+    def _arp_broken(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Broken chord pattern (1-3-2-3 style)."""
+        events = []
+        sixteenth_duration = beat_duration / 4
+        # Broken pattern: root, 5th, 3rd, 5th, root+octave, 5th, 3rd, 5th
+        if len(chord_notes) >= 3:
+            pattern = [chord_notes[0], chord_notes[2], chord_notes[1], chord_notes[2]]
+        else:
+            pattern = chord_notes + [chord_notes[0]]
+
+        for i in range(16):
+            if random.random() < 0.75:
+                note_time = start_time + i * sixteenth_duration
+                note = pattern[i % len(pattern)]
+                base_velocity = random.randint(30, 55)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
+                events.append((note_time, note, velocity))
+        return events
+
+    def _arp_triplet(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Triplet feel arpeggio."""
+        events = []
+        # 12 triplets per measure (3 per beat)
+        triplet_duration = beat_duration / 3
+        arp_pattern = chord_notes + [chord_notes[0] + 12]
+
+        for i in range(12):
+            if random.random() < 0.8:
+                note_time = start_time + i * triplet_duration
+                note = arp_pattern[i % len(arp_pattern)]
+                base_velocity = random.randint(30, 55)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
+                events.append((note_time, note, velocity))
+        return events
+
+    def _arp_syncopated(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Syncopated arpeggio pattern."""
+        events = []
+        sixteenth_duration = beat_duration / 4
+        arp_pattern = chord_notes + [chord_notes[0] + 12]
+        # Syncopated rhythm: play on off-beats
+        syncopated_steps = [1, 3, 5, 6, 8, 10, 11, 13, 15]
+
+        for i in syncopated_steps:
+            if random.random() < 0.85:
+                note_time = start_time + i * sixteenth_duration
+                note = arp_pattern[i % len(arp_pattern)]
+                base_velocity = random.randint(35, 60)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
+                events.append((note_time, note, velocity))
+        return events
+
+    def _arp_double_octave(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Two octave range arpeggio."""
+        events = []
+        sixteenth_duration = beat_duration / 4
+        # Extend to two octaves
+        arp_pattern = chord_notes + [n + 12 for n in chord_notes] + [chord_notes[0] + 24]
+
+        for i in range(16):
+            if random.random() < 0.8:
+                note_time = start_time + i * sixteenth_duration
+                note = arp_pattern[i % len(arp_pattern)]
+                base_velocity = random.randint(30, 55)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
+                events.append((note_time, note, velocity))
+        return events
+
+    def _arp_sparse(self, chord_notes, start_time, beat_duration, measure, intensity):
+        """Sparse, minimal arpeggio."""
+        events = []
+        eighth_duration = beat_duration / 2
+        arp_pattern = chord_notes + [chord_notes[0] + 12]
+
+        for i in range(8):
+            if random.random() < 0.6:
+                note_time = start_time + i * eighth_duration
+                note = arp_pattern[i % len(arp_pattern)]
+                base_velocity = random.randint(30, 50)
+                velocity = self._get_velocity(measure, base_velocity, intensity)
+                events.append((note_time, note, velocity))
+        return events
+
+    def _get_velocity(self, measure, base_velocity, intensity):
+        """Helper to get velocity with song structure."""
+        if self.song_structure:
+            return self.song_structure.get_velocity_curve(measure, base_velocity)
+        else:
+            return int(base_velocity * intensity)
     
     def _create_sustained_pattern(self, chord_notes: List[int], start_time: float,
                                 beat_duration: float, measure: int, intensity: float) -> List[Tuple[float, int, int]]:
