@@ -71,6 +71,22 @@ class AcidGridGUI:
         self.is_generating = False
         self.last_generated_file = None
 
+        # Track mix state (for preview control)
+        self.track_enabled = {
+            "rhythm": tk.BooleanVar(value=True),
+            "bassline": tk.BooleanVar(value=True),
+            "sub_bass": tk.BooleanVar(value=True),
+            "synth_accomp": tk.BooleanVar(value=True),
+            "synth_lead": tk.BooleanVar(value=True),
+        }
+        self.track_volume = {
+            "rhythm": tk.DoubleVar(value=100.0),
+            "bassline": tk.DoubleVar(value=100.0),
+            "sub_bass": tk.DoubleVar(value=80.0),
+            "synth_accomp": tk.DoubleVar(value=80.0),
+            "synth_lead": tk.DoubleVar(value=70.0),
+        }
+
         # Build UI
         self._build_ui()
 
@@ -94,6 +110,9 @@ class AcidGridGUI:
 
         # Parameters section
         self._build_parameters(main_frame)
+
+        # Mix & Preview controls
+        self._build_mix_panel(main_frame)
 
         # Actions section
         self._build_actions(main_frame)
@@ -256,10 +275,71 @@ class AcidGridGUI:
         # Configure column weights
         params_frame.columnconfigure(1, weight=1)
 
+    def _build_mix_panel(self, parent):
+        """Build the mix & preview control panel."""
+        mix_frame = ttk.LabelFrame(parent, text="Mix & Preview", padding="15")
+        mix_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+
+        track_labels = {
+            "rhythm": "🥁 Rhythm",
+            "bassline": "🎸 Bassline",
+            "sub_bass": "🔊 Sub Bass",
+            "synth_accomp": "🎹 Synth Accomp",
+            "synth_lead": "🎼 Synth Lead",
+        }
+
+        # Create mix controls for each track
+        for idx, (track_name, track_label) in enumerate(track_labels.items()):
+            # Track enable checkbox
+            check = ttk.Checkbutton(
+                mix_frame,
+                text=track_label,
+                variable=self.track_enabled[track_name],
+                command=lambda t=track_name: self._on_track_toggle(t)
+            )
+            check.grid(row=idx, column=0, sticky=tk.W, pady=3, padx=5)
+
+            # Volume label
+            vol_label = ttk.Label(
+                mix_frame,
+                text=f"{int(self.track_volume[track_name].get())}%",
+                font=("Helvetica", 9),
+                width=5
+            )
+            vol_label.grid(row=idx, column=2, sticky=tk.E, pady=3, padx=5)
+
+            # Store label reference for updates
+            setattr(self, f"vol_label_{track_name}", vol_label)
+
+            # Volume slider
+            vol_slider = ttk.Scale(
+                mix_frame,
+                from_=0,
+                to=127,
+                variable=self.track_volume[track_name],
+                orient=tk.HORIZONTAL,
+                command=lambda val, t=track_name, lbl=vol_label: self._on_volume_change(val, t, lbl)
+            )
+            vol_slider.grid(row=idx, column=1, sticky=(tk.W, tk.E), pady=3, padx=10)
+
+        # Quick presets
+        preset_frame = ttk.Frame(mix_frame)
+        preset_frame.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(10, 0))
+
+        ttk.Label(preset_frame, text="Quick Mix:").grid(row=0, column=0, sticky=tk.W, padx=5)
+
+        ttk.Button(preset_frame, text="All", command=self._mix_preset_all, width=8).grid(row=0, column=1, padx=2)
+        ttk.Button(preset_frame, text="No Drums", command=self._mix_preset_no_drums, width=10).grid(row=0, column=2, padx=2)
+        ttk.Button(preset_frame, text="No Synths", command=self._mix_preset_no_synths, width=10).grid(row=0, column=3, padx=2)
+        ttk.Button(preset_frame, text="Bass Only", command=self._mix_preset_bass_only, width=10).grid(row=0, column=4, padx=2)
+
+        # Configure column weights
+        mix_frame.columnconfigure(1, weight=1)
+
     def _build_actions(self, parent):
         """Build the actions section."""
         actions_frame = ttk.LabelFrame(parent, text="Actions", padding="15")
-        actions_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+        actions_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
 
         # Generate button (large, prominent)
         self.generate_btn = tk.Button(
@@ -308,7 +388,7 @@ class AcidGridGUI:
     def _build_status_bar(self, parent):
         """Build the status bar."""
         status_frame = ttk.Frame(parent, relief=tk.SUNKEN, borderwidth=1)
-        status_frame.grid(row=4, column=0, sticky=(tk.W, tk.E))
+        status_frame.grid(row=5, column=0, sticky=(tk.W, tk.E))
 
         self.status_label = ttk.Label(
             status_frame,
@@ -369,6 +449,46 @@ class AcidGridGUI:
     def _randomize_seed(self):
         """Randomize the seed value."""
         self.seed_var.set(int(time.time() * 1000000) % 1000000)
+
+    def _on_track_toggle(self, track_name):
+        """Handle track enable/disable toggle."""
+        enabled = self.track_enabled[track_name].get()
+        status = "enabled" if enabled else "muted"
+        self._update_status(f"Track '{track_name}' {status}")
+
+    def _on_volume_change(self, value, track_name, label):
+        """Handle track volume slider change."""
+        volume = int(float(value))
+        label.config(text=f"{volume}%")
+
+    def _mix_preset_all(self):
+        """Enable all tracks at default volumes."""
+        for track in self.track_enabled.keys():
+            self.track_enabled[track].set(True)
+        self._update_status("Mix: All tracks enabled")
+
+    def _mix_preset_no_drums(self):
+        """Disable rhythm track, enable others."""
+        self.track_enabled["rhythm"].set(False)
+        for track in ["bassline", "sub_bass", "synth_accomp", "synth_lead"]:
+            self.track_enabled[track].set(True)
+        self._update_status("Mix: No drums")
+
+    def _mix_preset_no_synths(self):
+        """Disable synth tracks, enable rhythm and bass."""
+        for track in ["rhythm", "bassline", "sub_bass"]:
+            self.track_enabled[track].set(True)
+        for track in ["synth_accomp", "synth_lead"]:
+            self.track_enabled[track].set(False)
+        self._update_status("Mix: No synths")
+
+    def _mix_preset_bass_only(self):
+        """Enable only bass tracks."""
+        for track in ["rhythm", "synth_accomp", "synth_lead"]:
+            self.track_enabled[track].set(False)
+        for track in ["bassline", "sub_bass"]:
+            self.track_enabled[track].set(True)
+        self._update_status("Mix: Bass only")
 
     def _browse_output(self):
         """Browse for output directory."""
@@ -517,8 +637,70 @@ class AcidGridGUI:
                 self.play_btn.config(state="normal")
                 self.export_btn.config(state="normal")
 
+    def _create_mixed_midi(self, source_file):
+        """Create a temporary MIDI file with current mix settings applied.
+
+        Args:
+            source_file: Source MIDI file path
+
+        Returns:
+            Path to temporary mixed MIDI file
+        """
+        import mido
+        import tempfile
+
+        # Read source MIDI
+        mid = mido.MidiFile(source_file)
+
+        # Create new MIDI with same settings
+        mixed = mido.MidiFile(ticks_per_beat=mid.ticks_per_beat)
+
+        # Track name to parameter mapping
+        track_map = {
+            "Rhythm": "rhythm",
+            "Bassline": "bassline",
+            "Sub Bass": "sub_bass",
+            "Synth Accompaniment": "synth_accomp",
+            "Synth Lead": "synth_lead",
+        }
+
+        # Copy tracks with mix settings
+        for track in mid.tracks:
+            # Get track name
+            track_name = None
+            for msg in track:
+                if msg.type == 'track_name':
+                    track_name = msg.name
+                    break
+
+            # Check if track should be included
+            param_name = track_map.get(track_name)
+            if param_name and not self.track_enabled[param_name].get():
+                continue  # Skip muted tracks
+
+            # Create new track with adjusted velocity
+            new_track = mido.MidiTrack()
+            volume_scale = 1.0
+            if param_name:
+                volume_scale = self.track_volume[param_name].get() / 100.0
+
+            for msg in track:
+                new_msg = msg.copy()
+                # Adjust note velocities
+                if hasattr(new_msg, 'velocity') and new_msg.velocity > 0:
+                    new_msg.velocity = max(1, min(127, int(new_msg.velocity * volume_scale)))
+                new_track.append(new_msg)
+
+            mixed.tracks.append(new_track)
+
+        # Save to temporary file
+        temp_file = Path(tempfile.gettempdir()) / f"acidgrid_preview_{int(time.time())}.mid"
+        mixed.save(str(temp_file))
+
+        return temp_file
+
     def _play_preview(self):
-        """Play preview of generated track."""
+        """Play preview of generated track with current mix settings."""
         if not self.last_generated_file:
             return
 
@@ -530,12 +712,20 @@ class AcidGridGUI:
             return
 
         try:
+            # Create mixed MIDI with current settings
+            mixed_file = self._create_mixed_midi(self.last_generated_file)
+
             player = MidiPlayer()
-            self._update_status(f"Playing preview: {self.last_generated_file.name}")
+            self._update_status(f"Playing preview: {self.last_generated_file.name} (with mix)")
 
             # Play in background thread
             def play_worker():
-                player.play(self.last_generated_file, duration=60)  # 60 second preview
+                player.play(mixed_file, duration=60)  # 60 second preview
+                # Clean up temporary file
+                try:
+                    mixed_file.unlink()
+                except:
+                    pass
                 self.root.after(0, self._update_status, "Preview finished")
 
             thread = threading.Thread(target=play_worker)
