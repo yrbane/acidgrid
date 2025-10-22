@@ -21,6 +21,7 @@ from .midi_player import MidiPlayer, check_synth_available, install_synth_instru
 from .music_styles import get_style, get_available_styles, get_style_tempo
 from .interactive import interactive_mode
 from .audio_export import AudioExporter, check_audio_export_available, show_audio_export_status
+from .presets import PresetManager, create_preset_from_args
 
 
 def main():
@@ -118,8 +119,72 @@ def main():
         action="store_true",
         help="Check audio export availability (FluidSynth, SoundFont, ffmpeg)"
     )
+    parser.add_argument(
+        "--preset",
+        type=str,
+        help="Load a named preset configuration"
+    )
+    parser.add_argument(
+        "--list-presets",
+        action="store_true",
+        help="List all available presets (builtin and custom)"
+    )
+    parser.add_argument(
+        "--show-preset",
+        type=str,
+        metavar="NAME",
+        help="Show detailed information about a preset"
+    )
+    parser.add_argument(
+        "--save-preset",
+        type=str,
+        metavar="NAME",
+        help="Save current configuration as a named preset"
+    )
+    parser.add_argument(
+        "--preset-description",
+        type=str,
+        help="Description for saved preset (used with --save-preset)"
+    )
+    parser.add_argument(
+        "--delete-preset",
+        type=str,
+        metavar="NAME",
+        help="Delete a custom preset"
+    )
 
     args = parser.parse_args()
+
+    # Initialize preset manager
+    preset_manager = PresetManager()
+
+    # Handle preset management commands
+    if args.list_presets:
+        preset_manager.list_presets_detailed()
+        return
+
+    if args.show_preset:
+        preset_manager.show_preset_details(args.show_preset)
+        return
+
+    if args.delete_preset:
+        if preset_manager.delete_preset(args.delete_preset):
+            print(f"✅ Preset '{args.delete_preset}' deleted successfully")
+        return
+
+    # Load preset if specified
+    if args.preset:
+        preset = preset_manager.get_preset(args.preset)
+        if not preset:
+            print(f"Error: Preset '{args.preset}' not found")
+            print("\nAvailable presets:")
+            for name in preset_manager.list_presets():
+                print(f"  - {name}")
+            return
+
+        print(f"Loading preset: {preset.name}")
+        print(f"  {preset.description}")
+        preset_manager.apply_preset_to_args(preset, args)
 
     # Interactive mode - launch TUI
     if args.interactive:
@@ -276,6 +341,18 @@ def main():
     if args.play:
         player = MidiPlayer()
         player.play(output_file, duration=args.preview_duration)
+
+    # Save preset if requested
+    if args.save_preset:
+        description = args.preset_description or f"Custom preset: {args.style} at {tempo} BPM"
+        preset = create_preset_from_args(args.save_preset, description, args)
+
+        if preset_manager.save_preset(preset, overwrite=False):
+            print(f"\n✅ Preset '{args.save_preset}' saved successfully")
+            print(f"Location: {preset_manager.presets_dir / f'{args.save_preset}.json'}")
+            print(f"\nLoad with: acidgrid --preset {args.save_preset}")
+        else:
+            print(f"\n❌ Failed to save preset '{args.save_preset}'")
 
 
 if __name__ == "__main__":

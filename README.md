@@ -80,8 +80,10 @@ Every track gets an authentic name matching its style:
 - **Ambient**: "Dissolving Reflections", "Ocean at Dusk"
 - **IDM**: "draft_20_c", "buffer.overflow", "untitled_042"
 
-### 🎛️ Interactive Mode & Audio Export
+### 🎛️ Interactive Mode, Presets & Audio Export
 - **🎨 Interactive TUI**: Beautiful terminal interface with rich styling for easy parameter selection
+- **💾 Named Presets**: 13 builtin presets + unlimited custom presets (berlin-warehouse, detroit-acid, boom-bap, etc.)
+- **⚙️ Preset Management**: Save, load, list, and delete configurations with full JSON support
 - **🔊 Audio Export**: Render MIDI to audio files (WAV, MP3, OGG, FLAC) using FluidSynth
 - **🎹 Custom SoundFonts**: Use any .sf2 SoundFont for personalized sounds
 - **⚡ High-Quality Rendering**: Up to 96kHz sample rate, configurable gain
@@ -193,6 +195,14 @@ acidgrid --style drum&bass --measures 128
 #### Interactive Mode
 - `--interactive`, `-i`: Launch interactive mode with menu to choose all parameters
 
+#### Presets
+- `--preset NAME`: Load a named preset configuration
+- `--list-presets`: List all available presets (builtin and custom)
+- `--show-preset NAME`: Show detailed information about a preset
+- `--save-preset NAME`: Save current configuration as a named preset
+- `--preset-description DESC`: Description for saved preset
+- `--delete-preset NAME`: Delete a custom preset
+
 #### Audio Export (requires FluidSynth)
 - `--export-audio`: Export track to audio file (WAV/MP3/OGG/FLAC)
 - `--audio-format`: Audio format (choices: wav, mp3, ogg, flac) - **default: wav**
@@ -240,6 +250,46 @@ acidgrid --interactive
 # Or use shorthand
 acidgrid -i
 ```
+
+#### Presets
+```bash
+# List all available presets
+acidgrid --list-presets
+
+# Show details about a specific preset
+acidgrid --show-preset berlin-warehouse
+
+# Generate using a builtin preset
+acidgrid --preset detroit-acid
+
+# Generate using preset with overrides
+acidgrid --preset boom-bap --tempo 95 --measures 128
+
+# Create your own custom preset
+acidgrid --style house --tempo 125 --measures 192 --swing 0.25 \
+  --save-preset my-house --preset-description "My signature house sound"
+
+# Use your custom preset
+acidgrid --preset my-house
+
+# Delete a custom preset
+acidgrid --delete-preset my-house
+```
+
+**Built-in Presets:**
+- **berlin-warehouse**: Dark Berlin techno (132 BPM)
+- **detroit-acid**: Classic Detroit acid techno (128 BPM)
+- **hardfloor**: Fast hard techno (165 BPM)
+- **chicago-jack**: Classic Chicago house (124 BPM)
+- **deep-house-sunset**: Deep house vibes (122 BPM)
+- **jungle-massive**: Fast jungle breaks (174 BPM)
+- **amen-break**: Classic breakbeat (145 BPM)
+- **liquid-dnb**: Smooth drum & bass (174 BPM)
+- **boom-bap**: 90s boom bap hip-hop (90 BPM)
+- **lo-fi-chill**: Lo-fi hip-hop (85 BPM)
+- **trap-banger**: Hard trap (150 BPM)
+- **ambient-meditation**: Slow ambient (65 BPM)
+- **glitch-idm**: Experimental IDM (160 BPM)
 
 #### Audio Export
 ```bash
