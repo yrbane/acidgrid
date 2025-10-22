@@ -50,7 +50,7 @@ class AcidGridGUI:
         """
         self.root = root
         self.root.title("ACIDGRID")
-        self.root.geometry("650x720")
+        self.root.geometry("580x600")
         self.root.resizable(True, True)
 
         # Configure style with modern theme
@@ -105,8 +105,8 @@ class AcidGridGUI:
 
     def _build_ui(self):
         """Build the user interface."""
-        # Main container with reduced padding
-        main_frame = ttk.Frame(self.root, padding="10")
+        # Main container with minimal padding
+        main_frame = ttk.Frame(self.root, padding="6")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
@@ -132,32 +132,24 @@ class AcidGridGUI:
     def _build_header(self, parent):
         """Build the header section."""
         header_frame = ttk.Frame(parent)
-        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 8))
+        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 4))
 
         title = ttk.Label(
             header_frame,
             text="⚡ ACIDGRID",
-            font=("Helvetica", 18, "bold"),
+            font=("Helvetica", 14, "bold"),
             foreground="#00d4ff"
         )
         title.grid(row=0, column=0, sticky=tk.W)
 
-        subtitle = ttk.Label(
-            header_frame,
-            text="Multi-Style Electronic Music Generator",
-            font=("Helvetica", 8),
-            foreground="#888888"
-        )
-        subtitle.grid(row=1, column=0, sticky=tk.W)
-
     def _build_style_selector(self, parent):
         """Build the style selector section."""
-        style_frame = ttk.LabelFrame(parent, text="Style", padding="6")
-        style_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 8))
+        style_frame = ttk.LabelFrame(parent, text="Style", padding="4")
+        style_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 4))
 
         styles = get_available_styles()
 
-        # Create grid of style buttons (2 rows x 5 columns) - more compact
+        # Create grid of style buttons (2 rows x 5 columns) - ultra compact
         for idx, style_name in enumerate(styles):
             row = idx // 5
             col = idx % 5
@@ -166,12 +158,12 @@ class AcidGridGUI:
             style_obj = get_style(style_name)
             color = STYLE_COLORS.get(style_name, "#CCCCCC")
 
-            # Create custom button using Canvas for colored background - reduced size
-            btn_frame = tk.Frame(style_frame, width=115, height=42, bg=color)
-            btn_frame.grid(row=row, column=col, padx=3, pady=3)
+            # Create custom button using Canvas for colored background - ultra small
+            btn_frame = tk.Frame(style_frame, width=105, height=32, bg=color)
+            btn_frame.grid(row=row, column=col, padx=2, pady=2)
             btn_frame.pack_propagate(False)
 
-            # Radio button overlay with smaller font
+            # Radio button overlay with tiny font
             radio = tk.Radiobutton(
                 btn_frame,
                 text=f"{style_name.upper()}\n{style_obj.tempo_range[0]}-{style_obj.tempo_range[1]}",
@@ -179,7 +171,7 @@ class AcidGridGUI:
                 value=style_name,
                 bg=color,
                 fg='#000000',
-                font=("Helvetica", 7, "bold"),
+                font=("Helvetica", 6, "bold"),
                 indicatoron=False,
                 selectcolor=self._darken_color(color),
                 activebackground=self._darken_color(color),
@@ -190,13 +182,13 @@ class AcidGridGUI:
 
     def _build_parameters(self, parent):
         """Build the parameters section."""
-        params_frame = ttk.LabelFrame(parent, text="Parameters", padding="8")
-        params_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 6))
+        params_frame = ttk.LabelFrame(parent, text="Params", padding="4")
+        params_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 4))
 
         # Tempo slider
-        ttk.Label(params_frame, text="Tempo:", font=("Helvetica", 8)).grid(row=0, column=0, sticky=tk.W, pady=3)
-        self.tempo_label = ttk.Label(params_frame, text="128", font=("Helvetica", 8, "bold"), foreground="#00d4ff")
-        self.tempo_label.grid(row=0, column=2, sticky=tk.E, pady=3, padx=5)
+        ttk.Label(params_frame, text="Tempo:", font=("Helvetica", 7)).grid(row=0, column=0, sticky=tk.W, pady=2)
+        self.tempo_label = ttk.Label(params_frame, text="128", font=("Helvetica", 7, "bold"), foreground="#00d4ff")
+        self.tempo_label.grid(row=0, column=2, sticky=tk.E, pady=2, padx=3)
 
         tempo_slider = ttk.Scale(
             params_frame,
@@ -206,24 +198,35 @@ class AcidGridGUI:
             orient=tk.HORIZONTAL,
             command=self._on_tempo_change
         )
-        tempo_slider.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=3, padx=8)
+        tempo_slider.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2, padx=4)
 
-        # Measures dropdown
-        ttk.Label(params_frame, text="Measures:", font=("Helvetica", 8)).grid(row=1, column=0, sticky=tk.W, pady=3)
+        # Measures and Time Sig on same row
+        ttk.Label(params_frame, text="Measures:", font=("Helvetica", 7)).grid(row=1, column=0, sticky=tk.W, pady=2)
         measures_combo = ttk.Combobox(
             params_frame,
             textvariable=self.measures_var,
             values=[8, 16, 32, 64, 96, 128, 192],
-            width=8,
+            width=6,
             state="readonly",
-            font=("Helvetica", 8)
+            font=("Helvetica", 7)
         )
-        measures_combo.grid(row=1, column=1, sticky=tk.W, pady=3, padx=8)
+        measures_combo.grid(row=1, column=1, sticky=tk.W, pady=2, padx=4)
+
+        ttk.Label(params_frame, text="TimeSig:", font=("Helvetica", 7)).grid(row=1, column=2, sticky=tk.W, pady=2, padx=(8,0))
+        time_sig_combo = ttk.Combobox(
+            params_frame,
+            textvariable=self.time_sig_var,
+            values=get_available_time_signatures(),
+            width=5,
+            state="readonly",
+            font=("Helvetica", 7)
+        )
+        time_sig_combo.grid(row=1, column=3, sticky=tk.W, pady=2, padx=(2,0))
 
         # Swing slider
-        ttk.Label(params_frame, text="Swing:", font=("Helvetica", 8)).grid(row=2, column=0, sticky=tk.W, pady=3)
-        self.swing_label = ttk.Label(params_frame, text="0.00", font=("Helvetica", 8, "bold"), foreground="#00d4ff")
-        self.swing_label.grid(row=2, column=2, sticky=tk.E, pady=3, padx=5)
+        ttk.Label(params_frame, text="Swing:", font=("Helvetica", 7)).grid(row=2, column=0, sticky=tk.W, pady=2)
+        self.swing_label = ttk.Label(params_frame, text="0.00", font=("Helvetica", 7, "bold"), foreground="#00d4ff")
+        self.swing_label.grid(row=2, column=3, sticky=tk.E, pady=2, padx=3)
 
         swing_slider = ttk.Scale(
             params_frame,
@@ -233,74 +236,49 @@ class AcidGridGUI:
             orient=tk.HORIZONTAL,
             command=self._on_swing_change
         )
-        swing_slider.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=3, padx=8)
-
-        # Time signature dropdown
-        ttk.Label(params_frame, text="Time Sig:", font=("Helvetica", 8)).grid(row=3, column=0, sticky=tk.W, pady=3)
-        time_sig_combo = ttk.Combobox(
-            params_frame,
-            textvariable=self.time_sig_var,
-            values=get_available_time_signatures(),
-            width=8,
-            state="readonly",
-            font=("Helvetica", 8)
-        )
-        time_sig_combo.grid(row=3, column=1, sticky=tk.W, pady=3, padx=8)
-
-        # Output directory (compact, single line)
-        ttk.Label(params_frame, text="Output:", font=("Helvetica", 8)).grid(row=4, column=0, sticky=tk.W, pady=3)
-        self.output_label = ttk.Label(
-            params_frame,
-            text=str(self.output_dir),
-            font=("Helvetica", 7),
-            foreground="#888888"
-        )
-        self.output_label.grid(row=4, column=1, sticky=tk.W, pady=3, padx=8)
-
-        output_btn = ttk.Button(params_frame, text="...", command=self._browse_output, width=3)
-        output_btn.grid(row=4, column=2, sticky=tk.E, pady=3, padx=5)
+        swing_slider.grid(row=2, column=1, columnspan=2, sticky=(tk.W, tk.E), pady=2, padx=4)
 
         # Configure column weights
         params_frame.columnconfigure(1, weight=1)
 
     def _build_mix_panel(self, parent):
         """Build the mix & preview control panel."""
-        mix_frame = ttk.LabelFrame(parent, text="Mix", padding="6")
-        mix_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 6))
+        mix_frame = ttk.LabelFrame(parent, text="Mix", padding="4")
+        mix_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 4))
 
         track_labels = {
-            "rhythm": "🥁 Drums",
-            "bassline": "🎸 Bass",
-            "sub_bass": "🔊 Sub",
-            "synth_accomp": "🎹 Synth",
-            "synth_lead": "🎼 Lead",
+            "rhythm": "🥁",
+            "bassline": "🎸",
+            "sub_bass": "🔊",
+            "synth_accomp": "🎹",
+            "synth_lead": "🎼",
         }
 
-        # Create mix controls for each track - more compact
+        # Create mix controls for each track - ultra compact
         for idx, (track_name, track_label) in enumerate(track_labels.items()):
-            # Track enable checkbox
+            # Track enable checkbox - icon only
             check = ttk.Checkbutton(
                 mix_frame,
                 text=track_label,
                 variable=self.track_enabled[track_name],
                 command=lambda t=track_name: self._on_track_toggle(t)
             )
-            check.grid(row=idx, column=0, sticky=tk.W, pady=2, padx=3)
+            check.grid(row=idx, column=0, sticky=tk.W, pady=1, padx=2)
 
             # Volume label
             vol_label = ttk.Label(
                 mix_frame,
-                text=f"{int(self.track_volume[track_name].get())}%",
-                font=("Helvetica", 7),
+                text=f"{int(self.track_volume[track_name].get())}",
+                font=("Helvetica", 6),
                 foreground="#00d4ff",
-                width=4
+                width=3
             )
-            vol_label.grid(row=idx, column=2, sticky=tk.E, pady=2, padx=3)
+            vol_label.grid(row=idx, column=2, sticky=tk.E, pady=1, padx=2)
 
             # Store label reference for updates
             setattr(self, f"vol_label_{track_name}", vol_label)
 
-            # Volume slider - more compact
+            # Volume slider - ultra compact
             vol_slider = ttk.Scale(
                 mix_frame,
                 from_=0,
@@ -309,68 +287,66 @@ class AcidGridGUI:
                 orient=tk.HORIZONTAL,
                 command=lambda val, t=track_name, lbl=vol_label: self._on_volume_change(val, t, lbl)
             )
-            vol_slider.grid(row=idx, column=1, sticky=(tk.W, tk.E), pady=2, padx=6)
+            vol_slider.grid(row=idx, column=1, sticky=(tk.W, tk.E), pady=1, padx=3)
 
-        # Quick presets - more compact
+        # Quick presets - ultra compact
         preset_frame = ttk.Frame(mix_frame)
-        preset_frame.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(6, 0))
+        preset_frame.grid(row=5, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(3, 0))
 
-        ttk.Label(preset_frame, text="Presets:", font=("Helvetica", 8)).grid(row=0, column=0, sticky=tk.W, padx=3)
-
-        ttk.Button(preset_frame, text="All", command=self._mix_preset_all, width=6).grid(row=0, column=1, padx=1)
-        ttk.Button(preset_frame, text="-Drums", command=self._mix_preset_no_drums, width=7).grid(row=0, column=2, padx=1)
-        ttk.Button(preset_frame, text="-Synths", command=self._mix_preset_no_synths, width=7).grid(row=0, column=3, padx=1)
-        ttk.Button(preset_frame, text="Bass", command=self._mix_preset_bass_only, width=6).grid(row=0, column=4, padx=1)
+        ttk.Button(preset_frame, text="All", command=self._mix_preset_all, width=5).grid(row=0, column=0, padx=1)
+        ttk.Button(preset_frame, text="-Drm", command=self._mix_preset_no_drums, width=5).grid(row=0, column=1, padx=1)
+        ttk.Button(preset_frame, text="-Syn", command=self._mix_preset_no_synths, width=5).grid(row=0, column=2, padx=1)
+        ttk.Button(preset_frame, text="Bass", command=self._mix_preset_bass_only, width=5).grid(row=0, column=3, padx=1)
 
         # Configure column weights
         mix_frame.columnconfigure(1, weight=1)
 
     def _build_actions(self, parent):
         """Build the actions section."""
-        actions_frame = ttk.LabelFrame(parent, text="Actions", padding="8")
-        actions_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 6))
+        actions_frame = ttk.LabelFrame(parent, text="Actions", padding="4")
+        actions_frame.grid(row=4, column=0, sticky=(tk.W, tk.E), pady=(0, 4))
 
-        # Generate button (compact but still prominent)
+        # Generate button (ultra compact but still prominent)
         self.generate_btn = tk.Button(
             actions_frame,
             text="⚡ GENERATE",
-            font=("Helvetica", 11, "bold"),
+            font=("Helvetica", 9, "bold"),
             bg="#4CAF50",
             fg="white",
             activebackground="#45a049",
             command=self._generate_track,
             height=1,
             relief=tk.RAISED,
-            borderwidth=2
+            borderwidth=1
         )
-        self.generate_btn.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 6))
+        self.generate_btn.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 3))
 
-        # Secondary actions - more compact
+        # Secondary actions - ultra compact
         self.play_btn = ttk.Button(
             actions_frame,
-            text="▶ Play",
+            text="▶",
             command=self._play_preview,
             state="disabled",
-            width=8
+            width=4
         )
-        self.play_btn.grid(row=1, column=0, sticky=(tk.W, tk.E), padx=(0, 3))
+        self.play_btn.grid(row=1, column=0, sticky=(tk.W, tk.E), padx=(0, 2))
 
         self.export_btn = ttk.Button(
             actions_frame,
-            text="💾 Export",
+            text="💾",
             command=self._export_audio,
             state="disabled",
-            width=8
+            width=4
         )
-        self.export_btn.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=3)
+        self.export_btn.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=2)
 
         self.open_btn = ttk.Button(
             actions_frame,
-            text="📁 Folder",
+            text="📁",
             command=self._open_output_folder,
-            width=8
+            width=4
         )
-        self.open_btn.grid(row=1, column=2, sticky=(tk.W, tk.E), padx=(3, 0))
+        self.open_btn.grid(row=1, column=2, sticky=(tk.W, tk.E), padx=(2, 0))
 
         # Configure column weights
         actions_frame.columnconfigure(0, weight=1)
@@ -385,17 +361,17 @@ class AcidGridGUI:
         self.status_label = ttk.Label(
             status_frame,
             text="Ready",
-            font=("Helvetica", 8),
+            font=("Helvetica", 7),
             foreground="#888888"
         )
-        self.status_label.grid(row=0, column=0, sticky=tk.W, padx=4, pady=1)
+        self.status_label.grid(row=0, column=0, sticky=tk.W, padx=3, pady=1)
 
         self.progress = ttk.Progressbar(
             status_frame,
             mode='indeterminate',
-            length=150
+            length=120
         )
-        self.progress.grid(row=0, column=1, sticky=tk.E, padx=4, pady=1)
+        self.progress.grid(row=0, column=1, sticky=tk.E, padx=3, pady=1)
 
         status_frame.columnconfigure(0, weight=1)
 
