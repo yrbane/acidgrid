@@ -361,18 +361,50 @@ class BasslineGenerator:
         return root + offset
     
     def _create_slide(self, start_note: int, end_note: int, start_time: float, end_time: float) -> List[Tuple[float, int, int]]:
-        """Create a slide effect between two notes."""
+        """Create a 303-style glide/portamento effect between two notes.
+
+        Simulates the classic TB-303 glide with smooth pitch transitions and
+        appropriate velocity curves for authentic acid bass sound.
+
+        Args:
+            start_note: Starting MIDI note
+            end_note: Target MIDI note
+            start_time: Start time in seconds
+            end_time: End time in seconds
+
+        Returns:
+            List of intermediate note events creating glide effect
+        """
         slide_events = []
-        num_steps = 4  # Number of intermediate notes
-        
+
+        # Calculate interval and determine glide characteristics
+        interval = abs(end_note - start_note)
+
+        # More steps for larger intervals (smoother glide)
+        if interval <= 2:
+            num_steps = 3  # Short glide for semitone/tone
+        elif interval <= 5:
+            num_steps = 5  # Medium glide for small intervals
+        elif interval <= 12:
+            num_steps = 8  # Longer glide for larger intervals
+        else:
+            num_steps = 12  # Extended glide for octave jumps
+
         note_step = (end_note - start_note) / num_steps
         time_step = (end_time - start_time) / num_steps
-        
+
+        # Create glide with exponential velocity curve (303-style crescendo)
         for i in range(num_steps):
             slide_time = start_time + (i + 1) * time_step
             slide_note = int(start_note + (i + 1) * note_step)
-            slide_velocity = 60 + i * 10  # Crescendo during slide
-            
+
+            # Exponential velocity curve for more natural 303 sound
+            # Starts lower, builds up momentum
+            velocity_progress = (i + 1) / num_steps
+            # Exponential curve: slow start, faster end
+            velocity_curve = velocity_progress ** 1.5
+            slide_velocity = int(50 + velocity_curve * 35)  # Range: 50-85
+
             slide_events.append((slide_time, slide_note, slide_velocity))
-        
+
         return slide_events
