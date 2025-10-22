@@ -107,22 +107,46 @@ If you see this, **installation successful!** 🎉
 
 ## 🎮 Quick Test
 
-### Using MIDI Controller
+### Test 1: Single Mixed Clip
 
 1. Connect MIDI controller
 2. In Preferences → Link/Tempo/MIDI:
    - Set **ACIDGRID Input** to your controller
 3. Create a MIDI track
-4. Press **C4** (60) on your controller
-5. A **House** clip should appear!
+4. Press **C#4** (61) on your controller
+5. A **Techno** clip (all tracks mixed) should appear!
 
-### Using Python Console (Advanced)
+### Test 2: Full Track Generation (NEW!)
 
-In Ableton's Python console:
-```python
-# This will be available in future versions
-# For now, use MIDI controller method
-```
+1. Create 5 MIDI tracks in Ableton
+2. Select the first track
+3. Press **A5** (81) on your controller
+4. **5 separate clips** should appear on the 5 tracks:
+   - Track 1: Rhythm
+   - Track 2: Bassline
+   - Track 3: Sub Bass
+   - Track 4: Synth Accompaniment
+   - Track 5: Synth Lead
+
+### Test 3: Single Track Generation (NEW!)
+
+1. Select a MIDI track
+2. Press **C3** (48) to generate only the Rhythm track
+3. Or press **C#3** (49) for only Bassline, etc.
+
+### MIDI Mapping Quick Reference
+
+**Styles** (C4-A4): Mixed clip with selected style
+- C4=House, C#4=Techno, D4=Hard-Tekno, etc.
+
+**Individual Tracks** (C3-E3):
+- C3=Rhythm, C#3=Bassline, D3=Sub Bass, D#3=Synth Accomp, E3=Synth Lead
+
+**Full Track** (A5):
+- Generates 5 clips on 5 consecutive tracks
+
+**Measure Presets** (C5-E5):
+- C5=16, C#5=32, D5=64, D#5=128, E5=192 measures
 
 ## 🐛 Troubleshooting
 

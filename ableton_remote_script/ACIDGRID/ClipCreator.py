@@ -39,7 +39,7 @@ class ClipCreator:
         """
         self.song = song
 
-    def generate_acidgrid_clip(self, clip, style, measures, tempo):
+    def generate_acidgrid_clip(self, clip, style, measures, tempo, track_type=None):
         """Generate ACIDGRID content in an Ableton Live clip.
 
         Args:
@@ -47,6 +47,8 @@ class ClipCreator:
             style: Music style name (str)
             measures: Number of measures
             tempo: Tempo in BPM
+            track_type: Specific track to generate (None = all tracks mixed)
+                       Options: 'rhythm', 'bassline', 'sub_bass', 'synth_accomp', 'synth_lead'
         """
         # Get style configuration
         style_config = get_style(style)
@@ -54,28 +56,53 @@ class ClipCreator:
         # Create song structure
         song_structure = SongStructure(measures, style=style_config)
 
-        # Initialize generators
-        rhythm_gen = RhythmGenerator(song_structure, style=style_config)
-        bassline_gen = BasslineGenerator(song_structure, style=style_config)
-        sub_bass_gen = SubBassGenerator(song_structure, style=style_config)
-        synth_accomp_gen = SynthAccompanimentGenerator(song_structure, style=style_config)
-        synth_lead_gen = SynthLeadGenerator(song_structure, style=style_config)
+        # Generate specific track or all tracks
+        if track_type == 'rhythm':
+            rhythm_gen = RhythmGenerator(song_structure, style=style_config)
+            rhythm_events = rhythm_gen.generate(measures, tempo)
+            self._add_events_to_clip(clip, rhythm_events, is_drums=True)
 
-        # Generate events
-        rhythm_events = rhythm_gen.generate(measures, tempo)
-        bassline_events = bassline_gen.generate(measures, tempo)
-        sub_bass_events = sub_bass_gen.generate(measures, tempo)
-        synth_accomp_events = synth_accomp_gen.generate(measures, tempo)
-        synth_lead_events = synth_lead_gen.generate(measures, tempo)
+        elif track_type == 'bassline':
+            bassline_gen = BasslineGenerator(song_structure, style=style_config)
+            bassline_events = bassline_gen.generate(measures, tempo)
+            self._add_events_to_clip(clip, bassline_events, is_drums=False)
 
-        # Add rhythm (drums on channel 10)
-        self._add_events_to_clip(clip, rhythm_events, is_drums=True)
+        elif track_type == 'sub_bass':
+            sub_bass_gen = SubBassGenerator(song_structure, style=style_config)
+            sub_bass_events = sub_bass_gen.generate(measures, tempo)
+            self._add_events_to_clip(clip, sub_bass_events, is_drums=False)
 
-        # Add melodic tracks
-        self._add_events_to_clip(clip, bassline_events, is_drums=False)
-        self._add_events_to_clip(clip, sub_bass_events, is_drums=False)
-        self._add_events_to_clip(clip, synth_accomp_events, is_drums=False)
-        self._add_events_to_clip(clip, synth_lead_events, is_drums=False)
+        elif track_type == 'synth_accomp':
+            synth_accomp_gen = SynthAccompanimentGenerator(song_structure, style=style_config)
+            synth_accomp_events = synth_accomp_gen.generate(measures, tempo)
+            self._add_events_to_clip(clip, synth_accomp_events, is_drums=False)
+
+        elif track_type == 'synth_lead':
+            synth_lead_gen = SynthLeadGenerator(song_structure, style=style_config)
+            synth_lead_events = synth_lead_gen.generate(measures, tempo)
+            self._add_events_to_clip(clip, synth_lead_events, is_drums=False)
+
+        else:
+            # Generate all tracks mixed (legacy mode)
+            rhythm_gen = RhythmGenerator(song_structure, style=style_config)
+            bassline_gen = BasslineGenerator(song_structure, style=style_config)
+            sub_bass_gen = SubBassGenerator(song_structure, style=style_config)
+            synth_accomp_gen = SynthAccompanimentGenerator(song_structure, style=style_config)
+            synth_lead_gen = SynthLeadGenerator(song_structure, style=style_config)
+
+            # Generate events
+            rhythm_events = rhythm_gen.generate(measures, tempo)
+            bassline_events = bassline_gen.generate(measures, tempo)
+            sub_bass_events = sub_bass_gen.generate(measures, tempo)
+            synth_accomp_events = synth_accomp_gen.generate(measures, tempo)
+            synth_lead_events = synth_lead_gen.generate(measures, tempo)
+
+            # Add all tracks
+            self._add_events_to_clip(clip, rhythm_events, is_drums=True)
+            self._add_events_to_clip(clip, bassline_events, is_drums=False)
+            self._add_events_to_clip(clip, sub_bass_events, is_drums=False)
+            self._add_events_to_clip(clip, synth_accomp_events, is_drums=False)
+            self._add_events_to_clip(clip, synth_lead_events, is_drums=False)
 
     def _add_events_to_clip(self, clip, events, is_drums=False):
         """Add MIDI events to Ableton clip.

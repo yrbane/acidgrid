@@ -73,6 +73,29 @@ MEASURE_MAPPING = {
     "channel": 0
 }
 
+# Track selection mapping (for individual track generation)
+TRACK_MAPPING = {
+    "rhythm": {"note": 48, "channel": 0},         # C3 - Rhythm track
+    "bassline": {"note": 49, "channel": 0},       # C#3 - Bassline track
+    "sub_bass": {"note": 50, "channel": 0},       # D3 - Sub Bass track
+    "synth_accomp": {"note": 51, "channel": 0},   # D#3 - Synth Accompaniment
+    "synth_lead": {"note": 52, "channel": 0},     # E3 - Synth Lead
+}
+
+# Generation mode mapping
+GENERATION_MODE_MAPPING = {
+    "full_track": {"note": 81, "channel": 0},     # A5 - Generate all 5 tracks separately
+}
+
+# Track names for Ableton
+TRACK_NAMES = {
+    "rhythm": "Rhythm",
+    "bassline": "Bassline",
+    "sub_bass": "Sub Bass",
+    "synth_accomp": "Synth Accompaniment",
+    "synth_lead": "Synth Lead",
+}
+
 # Default settings
 DEFAULT_MEASURES = 32
 DEFAULT_STYLE = "techno"
