@@ -167,7 +167,30 @@ See **[ableton_remote_script/README.md](ableton_remote_script/README.md)** for f
 
 ## 💣 Usage
 
-### Quick Start
+### 🎨 GUI Mode (NEW!)
+
+Launch the beautiful graphical interface for easy track generation:
+
+```bash
+# Launch GUI
+acidgrid --gui
+# or
+acidgrid -g
+```
+
+**GUI Features:**
+- 🎨 **Visual style selector** with 10 color-coded style buttons
+- 🎛️ **Real-time parameter controls** (tempo slider, measures, swing, time signature)
+- ⚡ **One-click generation** with large prominent button
+- ▶️ **Instant preview** playback
+- 💾 **Audio export** directly from GUI (WAV/MP3)
+- 📊 **Progress indicators** and status updates
+- 🎲 **Custom seed support** for reproducible tracks
+- 📁 **Output folder browser** for organizing your tracks
+
+Perfect for beginners and quick experimentation!
+
+### Quick Start (CLI)
 ```bash
 # Generate house track (default: 192 measures)
 acidgrid --style house
@@ -191,6 +214,9 @@ acidgrid --style drum&bass --measures 128
 - `--swing`: Swing/groove amount 0.0-1.0 (0.0=straight, 0.5=triplet, 1.0=max swing)
 - `--seed`: Force specific seed for reproducible generation (optional)
 - `--output`: Output directory for MIDI files - **default: ./output/**
+
+#### GUI Mode
+- `--gui`, `-g`: Launch graphical user interface (GUI)
 
 #### Interactive Mode
 - `--interactive`, `-i`: Launch interactive mode with menu to choose all parameters

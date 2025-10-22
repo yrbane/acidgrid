@@ -92,6 +92,12 @@ def main():
         help="Launch interactive mode with menu to choose all parameters"
     )
     parser.add_argument(
+        "--gui",
+        "-g",
+        action="store_true",
+        help="Launch graphical user interface (GUI)"
+    )
+    parser.add_argument(
         "--export-audio",
         action="store_true",
         help="Export track to audio file (requires FluidSynth)"
@@ -192,6 +198,12 @@ def main():
         print(f"Loading preset: {preset.name}")
         print(f"  {preset.description}")
         preset_manager.apply_preset_to_args(preset, args)
+
+    # GUI mode - launch graphical interface
+    if args.gui:
+        from .gui import launch_gui
+        launch_gui()
+        return
 
     # Interactive mode - launch TUI
     if args.interactive:

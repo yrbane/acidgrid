@@ -1,0 +1,623 @@
+#!/usr/bin/env python3
+"""
+ACIDGRID GUI - Graphical User Interface for ACIDGRID
+A simple and elegant interface for generating techno tracks.
+"""
+
+import tkinter as tk
+from tkinter import ttk, filedialog, messagebox
+import random
+import time
+import threading
+from pathlib import Path
+from typing import Optional
+
+from .music_styles import get_available_styles, get_style, get_style_tempo
+from .time_signature import get_available_time_signatures, parse_time_signature
+from .generators import (
+    RhythmGenerator, BasslineGenerator, SubBassGenerator,
+    SynthAccompanimentGenerator, SynthLeadGenerator
+)
+from .song_structure import SongStructure
+from .midi_output import MidiComposer, DrumMidiComposer
+from .track_naming import generate_track_name
+from .midi_player import MidiPlayer, check_synth_available
+
+
+# Style colors for buttons (RGB hex)
+STYLE_COLORS = {
+    "house": "#FF8C00",      # Orange
+    "techno": "#9370DB",     # Purple
+    "hard-tekno": "#DC143C", # Red
+    "breakbeat": "#FFD700",  # Yellow/Gold
+    "idm": "#00CED1",        # Cyan
+    "jungle": "#32CD32",     # Green
+    "hip-hop": "#8B4513",    # Brown
+    "trap": "#FF69B4",       # Pink
+    "ambient": "#87CEEB",    # Light Blue
+    "drum&bass": "#00FF00",  # Lime
+}
+
+
+class AcidGridGUI:
+    """Main GUI application for ACIDGRID."""
+
+    def __init__(self, root):
+        """Initialize the GUI application.
+
+        Args:
+            root: Tkinter root window
+        """
+        self.root = root
+        self.root.title("ACIDGRID Generator")
+        self.root.geometry("800x900")
+        self.root.resizable(True, True)
+
+        # Configure style
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
+
+        # State variables
+        self.selected_style = tk.StringVar(value="techno")
+        self.tempo_var = tk.IntVar(value=128)
+        self.measures_var = tk.IntVar(value=32)
+        self.swing_var = tk.DoubleVar(value=0.0)
+        self.time_sig_var = tk.StringVar(value="4/4")
+        self.seed_var = tk.IntVar(value=int(time.time()))
+        self.use_custom_seed = tk.BooleanVar(value=False)
+        self.output_dir = Path.cwd() / "output"
+
+        # Track generation state
+        self.is_generating = False
+        self.last_generated_file = None
+
+        # Build UI
+        self._build_ui()
+
+        # Update tempo range when style changes
+        self.selected_style.trace_add('write', self._on_style_change)
+        self._on_style_change()
+
+    def _build_ui(self):
+        """Build the user interface."""
+        # Main container with padding
+        main_frame = ttk.Frame(self.root, padding="20")
+        main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        self.root.columnconfigure(0, weight=1)
+        self.root.rowconfigure(0, weight=1)
+
+        # Header
+        self._build_header(main_frame)
+
+        # Style selector
+        self._build_style_selector(main_frame)
+
+        # Parameters section
+        self._build_parameters(main_frame)
+
+        # Actions section
+        self._build_actions(main_frame)
+
+        # Status bar
+        self._build_status_bar(main_frame)
+
+    def _build_header(self, parent):
+        """Build the header section."""
+        header_frame = ttk.Frame(parent)
+        header_frame.grid(row=0, column=0, sticky=(tk.W, tk.E), pady=(0, 20))
+
+        title = ttk.Label(
+            header_frame,
+            text="ACIDGRID",
+            font=("Helvetica", 32, "bold")
+        )
+        title.grid(row=0, column=0, sticky=tk.W)
+
+        subtitle = ttk.Label(
+            header_frame,
+            text="AI-Powered Techno Track Generator",
+            font=("Helvetica", 12)
+        )
+        subtitle.grid(row=1, column=0, sticky=tk.W)
+
+    def _build_style_selector(self, parent):
+        """Build the style selector section."""
+        style_frame = ttk.LabelFrame(parent, text="Music Style", padding="10")
+        style_frame.grid(row=1, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+
+        styles = get_available_styles()
+
+        # Create grid of style buttons (2 rows x 5 columns)
+        for idx, style_name in enumerate(styles):
+            row = idx // 5
+            col = idx % 5
+
+            # Get style info
+            style_obj = get_style(style_name)
+            color = STYLE_COLORS.get(style_name, "#CCCCCC")
+
+            # Create custom button using Canvas for colored background
+            btn_frame = tk.Frame(style_frame, width=140, height=60, bg=color)
+            btn_frame.grid(row=row, column=col, padx=5, pady=5)
+            btn_frame.pack_propagate(False)
+
+            # Radio button overlay
+            radio = tk.Radiobutton(
+                btn_frame,
+                text=f"{style_name.upper()}\n{style_obj.tempo_range[0]}-{style_obj.tempo_range[1]} BPM",
+                variable=self.selected_style,
+                value=style_name,
+                bg=color,
+                font=("Helvetica", 9, "bold"),
+                indicatoron=False,
+                selectcolor=self._darken_color(color),
+                activebackground=self._darken_color(color),
+                borderwidth=2,
+                relief=tk.RAISED
+            )
+            radio.pack(fill=tk.BOTH, expand=True)
+
+    def _build_parameters(self, parent):
+        """Build the parameters section."""
+        params_frame = ttk.LabelFrame(parent, text="Parameters", padding="15")
+        params_frame.grid(row=2, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+
+        # Tempo slider
+        ttk.Label(params_frame, text="Tempo (BPM):").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.tempo_label = ttk.Label(params_frame, text="128 BPM", font=("Helvetica", 10, "bold"))
+        self.tempo_label.grid(row=0, column=2, sticky=tk.E, pady=5, padx=5)
+
+        tempo_slider = ttk.Scale(
+            params_frame,
+            from_=80,
+            to=180,
+            variable=self.tempo_var,
+            orient=tk.HORIZONTAL,
+            command=self._on_tempo_change
+        )
+        tempo_slider.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5, padx=10)
+
+        # Measures dropdown
+        ttk.Label(params_frame, text="Measures:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        measures_combo = ttk.Combobox(
+            params_frame,
+            textvariable=self.measures_var,
+            values=[8, 16, 32, 64, 96, 128, 192],
+            width=10,
+            state="readonly"
+        )
+        measures_combo.grid(row=1, column=1, sticky=tk.W, pady=5, padx=10)
+
+        # Swing slider
+        ttk.Label(params_frame, text="Swing:").grid(row=2, column=0, sticky=tk.W, pady=5)
+        self.swing_label = ttk.Label(params_frame, text="0.00", font=("Helvetica", 10))
+        self.swing_label.grid(row=2, column=2, sticky=tk.E, pady=5, padx=5)
+
+        swing_slider = ttk.Scale(
+            params_frame,
+            from_=0.0,
+            to=1.0,
+            variable=self.swing_var,
+            orient=tk.HORIZONTAL,
+            command=self._on_swing_change
+        )
+        swing_slider.grid(row=2, column=1, sticky=(tk.W, tk.E), pady=5, padx=10)
+
+        # Time signature dropdown
+        ttk.Label(params_frame, text="Time Signature:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        time_sig_combo = ttk.Combobox(
+            params_frame,
+            textvariable=self.time_sig_var,
+            values=get_available_time_signatures(),
+            width=10,
+            state="readonly"
+        )
+        time_sig_combo.grid(row=3, column=1, sticky=tk.W, pady=5, padx=10)
+
+        # Random seed
+        seed_frame = ttk.Frame(params_frame)
+        seed_frame.grid(row=4, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=5)
+
+        ttk.Label(seed_frame, text="Seed:").grid(row=0, column=0, sticky=tk.W)
+
+        seed_check = ttk.Checkbutton(
+            seed_frame,
+            text="Custom",
+            variable=self.use_custom_seed,
+            command=self._on_seed_toggle
+        )
+        seed_check.grid(row=0, column=1, sticky=tk.W, padx=10)
+
+        self.seed_entry = ttk.Entry(seed_frame, textvariable=self.seed_var, width=15, state="disabled")
+        self.seed_entry.grid(row=0, column=2, sticky=tk.W, padx=5)
+
+        seed_random_btn = ttk.Button(
+            seed_frame,
+            text="Random",
+            command=self._randomize_seed,
+            state="disabled"
+        )
+        seed_random_btn.grid(row=0, column=3, sticky=tk.W, padx=5)
+        self.seed_random_btn = seed_random_btn
+
+        # Output directory
+        ttk.Label(params_frame, text="Output Dir:").grid(row=5, column=0, sticky=tk.W, pady=5)
+        self.output_label = ttk.Label(
+            params_frame,
+            text=str(self.output_dir),
+            font=("Helvetica", 9),
+            foreground="gray"
+        )
+        self.output_label.grid(row=5, column=1, sticky=tk.W, pady=5, padx=10)
+
+        output_btn = ttk.Button(params_frame, text="Browse...", command=self._browse_output)
+        output_btn.grid(row=5, column=2, sticky=tk.E, pady=5, padx=5)
+
+        # Configure column weights
+        params_frame.columnconfigure(1, weight=1)
+
+    def _build_actions(self, parent):
+        """Build the actions section."""
+        actions_frame = ttk.LabelFrame(parent, text="Actions", padding="15")
+        actions_frame.grid(row=3, column=0, sticky=(tk.W, tk.E), pady=(0, 15))
+
+        # Generate button (large, prominent)
+        self.generate_btn = tk.Button(
+            actions_frame,
+            text="⚡ GENERATE TRACK",
+            font=("Helvetica", 16, "bold"),
+            bg="#4CAF50",
+            fg="white",
+            activebackground="#45a049",
+            command=self._generate_track,
+            height=2,
+            relief=tk.RAISED,
+            borderwidth=3
+        )
+        self.generate_btn.grid(row=0, column=0, columnspan=3, sticky=(tk.W, tk.E), pady=(0, 15))
+
+        # Secondary actions
+        self.play_btn = ttk.Button(
+            actions_frame,
+            text="▶ Play Preview",
+            command=self._play_preview,
+            state="disabled"
+        )
+        self.play_btn.grid(row=1, column=0, sticky=(tk.W, tk.E), padx=(0, 5))
+
+        self.export_btn = ttk.Button(
+            actions_frame,
+            text="💾 Export Audio",
+            command=self._export_audio,
+            state="disabled"
+        )
+        self.export_btn.grid(row=1, column=1, sticky=(tk.W, tk.E), padx=5)
+
+        self.open_btn = ttk.Button(
+            actions_frame,
+            text="📁 Open Output",
+            command=self._open_output_folder
+        )
+        self.open_btn.grid(row=1, column=2, sticky=(tk.W, tk.E), padx=(5, 0))
+
+        # Configure column weights
+        actions_frame.columnconfigure(0, weight=1)
+        actions_frame.columnconfigure(1, weight=1)
+        actions_frame.columnconfigure(2, weight=1)
+
+    def _build_status_bar(self, parent):
+        """Build the status bar."""
+        status_frame = ttk.Frame(parent, relief=tk.SUNKEN, borderwidth=1)
+        status_frame.grid(row=4, column=0, sticky=(tk.W, tk.E))
+
+        self.status_label = ttk.Label(
+            status_frame,
+            text="Ready to generate",
+            font=("Helvetica", 9)
+        )
+        self.status_label.grid(row=0, column=0, sticky=tk.W, padx=5, pady=2)
+
+        self.progress = ttk.Progressbar(
+            status_frame,
+            mode='indeterminate',
+            length=200
+        )
+        self.progress.grid(row=0, column=1, sticky=tk.E, padx=5, pady=2)
+
+        status_frame.columnconfigure(0, weight=1)
+
+    def _darken_color(self, hex_color):
+        """Darken a hex color by 20% for hover effect."""
+        hex_color = hex_color.lstrip('#')
+        r, g, b = tuple(int(hex_color[i:i+2], 16) for i in (0, 2, 4))
+        r, g, b = int(r * 0.8), int(g * 0.8), int(b * 0.8)
+        return f'#{r:02x}{g:02x}{b:02x}'
+
+    def _on_style_change(self, *args):
+        """Handle style change event."""
+        style_name = self.selected_style.get()
+        style = get_style(style_name)
+
+        # Update tempo range
+        min_tempo, max_tempo = style.tempo_range
+        default_tempo = get_style_tempo(style_name, None)
+
+        # Update status
+        self.status_label.config(
+            text=f"Selected: {style.name} - {style.description}"
+        )
+
+    def _on_tempo_change(self, value):
+        """Handle tempo slider change."""
+        tempo = int(float(value))
+        self.tempo_label.config(text=f"{tempo} BPM")
+
+    def _on_swing_change(self, value):
+        """Handle swing slider change."""
+        swing = float(value)
+        self.swing_label.config(text=f"{swing:.2f}")
+
+    def _on_seed_toggle(self):
+        """Handle seed checkbox toggle."""
+        if self.use_custom_seed.get():
+            self.seed_entry.config(state="normal")
+            self.seed_random_btn.config(state="normal")
+        else:
+            self.seed_entry.config(state="disabled")
+            self.seed_random_btn.config(state="disabled")
+
+    def _randomize_seed(self):
+        """Randomize the seed value."""
+        self.seed_var.set(int(time.time() * 1000000) % 1000000)
+
+    def _browse_output(self):
+        """Browse for output directory."""
+        directory = filedialog.askdirectory(
+            title="Select Output Directory",
+            initialdir=self.output_dir
+        )
+        if directory:
+            self.output_dir = Path(directory)
+            self.output_label.config(text=str(self.output_dir))
+
+    def _update_status(self, message):
+        """Update status bar message."""
+        self.status_label.config(text=message)
+
+    def _generate_track(self):
+        """Generate a new track in background thread."""
+        if self.is_generating:
+            return
+
+        # Run generation in background thread
+        thread = threading.Thread(target=self._generate_track_worker)
+        thread.daemon = True
+        thread.start()
+
+    def _generate_track_worker(self):
+        """Worker thread for track generation."""
+        try:
+            self.is_generating = True
+            self.root.after(0, self._set_generating_state, True)
+
+            # Get parameters
+            style_name = self.selected_style.get()
+            tempo = self.tempo_var.get()
+            measures = self.measures_var.get()
+            swing = self.swing_var.get()
+            time_sig_str = self.time_sig_var.get()
+
+            # Set seed
+            if self.use_custom_seed.get():
+                seed = self.seed_var.get()
+            else:
+                seed = int(time.time() * 1000000)
+
+            random.seed(seed)
+
+            # Update status
+            self.root.after(0, self._update_status, f"Generating {style_name} track...")
+
+            # Get style and parse time signature
+            style = get_style(style_name)
+            time_signature = parse_time_signature(time_sig_str)
+
+            # Create song structure
+            song_structure = SongStructure(measures, style=style)
+
+            # Initialize generators
+            rhythm_gen = RhythmGenerator(song_structure, style=style, time_signature=time_signature, swing=swing)
+            bassline_gen = BasslineGenerator(song_structure, style=style, time_signature=time_signature)
+            sub_bass_gen = SubBassGenerator(song_structure, style=style, time_signature=time_signature)
+            synth_accomp_gen = SynthAccompanimentGenerator(song_structure, style=style, time_signature=time_signature)
+            synth_lead_gen = SynthLeadGenerator(song_structure, style=style, time_signature=time_signature)
+
+            # Generate tracks
+            self.root.after(0, self._update_status, "Generating rhythm...")
+            rhythm_track = rhythm_gen.generate(measures, tempo, swing=swing)
+
+            self.root.after(0, self._update_status, "Generating bassline...")
+            bassline_track = bassline_gen.generate(measures, tempo)
+
+            self.root.after(0, self._update_status, "Generating sub bass...")
+            sub_bass_track = sub_bass_gen.generate(measures, tempo)
+
+            self.root.after(0, self._update_status, "Generating synth accompaniment...")
+            synth_accomp_track = synth_accomp_gen.generate(measures, tempo)
+
+            self.root.after(0, self._update_status, "Generating synth lead...")
+            synth_lead_track = synth_lead_gen.generate(measures, tempo)
+
+            # Compose MIDI file
+            self.root.after(0, self._update_status, "Composing MIDI file...")
+            composer = MidiComposer(tempo=tempo)
+            drum_composer = DrumMidiComposer(tempo=tempo)
+
+            drum_composer.add_track("Rhythm", rhythm_track)
+            composer.add_track("Bassline", bassline_track)
+            composer.add_track("Sub Bass", sub_bass_track)
+            composer.add_track("Synth Accompaniment", synth_accomp_track)
+            composer.add_track("Synth Lead", synth_lead_track)
+
+            # Generate track name
+            track_name = generate_track_name(style=style)
+
+            # Save MIDI file
+            import mido
+            self.output_dir.mkdir(parents=True, exist_ok=True)
+            output_file = self.output_dir / f"{track_name}.mid"
+
+            mid = mido.MidiFile()
+            mid.ticks_per_beat = 480
+
+            # Add tempo track
+            tempo_track = mido.MidiTrack()
+            microseconds_per_beat = int(60_000_000 / tempo)
+            tempo_track.append(mido.MetaMessage('set_tempo', tempo=microseconds_per_beat, time=0))
+            mid.tracks.append(tempo_track)
+
+            # Add drum track
+            for track_name_inner, events in drum_composer.tracks.items():
+                midi_track = drum_composer._create_midi_track(track_name_inner, events)
+                mid.tracks.append(midi_track)
+
+            # Add other tracks
+            for track_name_inner, events in composer.tracks.items():
+                midi_track = composer._create_midi_track(track_name_inner, events)
+                mid.tracks.append(midi_track)
+
+            mid.save(str(output_file))
+
+            # Store last generated file
+            self.last_generated_file = output_file
+
+            # Update status
+            self.root.after(0, self._update_status, f"✅ Generated: {track_name}.mid (seed: {seed})")
+            self.root.after(0, self._set_generating_state, False)
+
+        except Exception as e:
+            self.root.after(0, self._update_status, f"❌ Error: {str(e)}")
+            self.root.after(0, self._set_generating_state, False)
+            self.root.after(0, messagebox.showerror, "Generation Error", str(e))
+
+        finally:
+            self.is_generating = False
+
+    def _set_generating_state(self, is_generating):
+        """Update UI state during generation."""
+        if is_generating:
+            self.generate_btn.config(state="disabled", bg="#CCCCCC")
+            self.progress.start(10)
+            self.play_btn.config(state="disabled")
+            self.export_btn.config(state="disabled")
+        else:
+            self.generate_btn.config(state="normal", bg="#4CAF50")
+            self.progress.stop()
+            if self.last_generated_file:
+                self.play_btn.config(state="normal")
+                self.export_btn.config(state="normal")
+
+    def _play_preview(self):
+        """Play preview of generated track."""
+        if not self.last_generated_file:
+            return
+
+        if not check_synth_available():
+            messagebox.showwarning(
+                "No Synthesizer",
+                "MIDI synthesizer not available. Please install timidity or fluidsynth."
+            )
+            return
+
+        try:
+            player = MidiPlayer()
+            self._update_status(f"Playing preview: {self.last_generated_file.name}")
+
+            # Play in background thread
+            def play_worker():
+                player.play(self.last_generated_file, duration=60)  # 60 second preview
+                self.root.after(0, self._update_status, "Preview finished")
+
+            thread = threading.Thread(target=play_worker)
+            thread.daemon = True
+            thread.start()
+
+        except Exception as e:
+            messagebox.showerror("Playback Error", str(e))
+
+    def _export_audio(self):
+        """Export track to audio file."""
+        if not self.last_generated_file:
+            return
+
+        from .audio_export import AudioExporter, check_audio_export_available
+
+        if not check_audio_export_available():
+            messagebox.showwarning(
+                "Audio Export Unavailable",
+                "FluidSynth is required for audio export.\nPlease install it first."
+            )
+            return
+
+        # Ask for format
+        format_choice = messagebox.askquestion(
+            "Export Format",
+            "Export as WAV?\n(No = MP3)",
+            icon='question'
+        )
+        audio_format = 'wav' if format_choice == 'yes' else 'mp3'
+
+        try:
+            exporter = AudioExporter()
+            audio_file = self.last_generated_file.with_suffix(f'.{audio_format}')
+
+            self._update_status(f"Exporting to {audio_format.upper()}...")
+
+            def export_worker():
+                success = exporter.export_to_format(
+                    midi_file=self.last_generated_file,
+                    output_file=audio_file,
+                    format=audio_format,
+                    sample_rate=44100,
+                    gain=0.5
+                )
+
+                if success:
+                    self.root.after(0, self._update_status, f"✅ Exported: {audio_file.name}")
+                    self.root.after(0, messagebox.showinfo, "Export Complete", f"Audio file saved:\n{audio_file}")
+                else:
+                    self.root.after(0, self._update_status, "❌ Export failed")
+                    self.root.after(0, messagebox.showerror, "Export Error", "Audio export failed")
+
+            thread = threading.Thread(target=export_worker)
+            thread.daemon = True
+            thread.start()
+
+        except Exception as e:
+            messagebox.showerror("Export Error", str(e))
+
+    def _open_output_folder(self):
+        """Open output folder in file manager."""
+        import subprocess
+        import sys
+
+        try:
+            if sys.platform == 'darwin':  # macOS
+                subprocess.run(['open', str(self.output_dir)])
+            elif sys.platform == 'win32':  # Windows
+                subprocess.run(['explorer', str(self.output_dir)])
+            else:  # Linux
+                subprocess.run(['xdg-open', str(self.output_dir)])
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not open folder: {e}")
+
+
+def launch_gui():
+    """Launch the ACIDGRID GUI application."""
+    root = tk.Tk()
+    app = AcidGridGUI(root)
+    root.mainloop()
+
+
+if __name__ == "__main__":
+    launch_gui()
