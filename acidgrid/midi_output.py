@@ -73,12 +73,13 @@ class MidiComposer:
             # Convert time to ticks
             event_time_ticks = int(event_time * self.ticks_per_beat * self.tempo / 60)
             delta_time = max(0, event_time_ticks - current_time_ticks)
-            
+
             if event_type == 'note_on':
                 track.append(mido.Message('note_on', note=note, velocity=velocity, time=delta_time))
             elif event_type == 'note_off':
-                track.append(mido.Message('note_off', note=note, velocity=0, time=delta_time))
-                
+                # Use calculated release velocity for natural sound
+                track.append(mido.Message('note_off', note=note, velocity=velocity, time=delta_time))
+
             current_time_ticks = event_time_ticks
             
         return track
@@ -94,20 +95,21 @@ class MidiComposer:
         return programs.get(track_name, 0)
         
     def _create_midi_events(self, events: List[Tuple[float, int, int]]) -> List[Tuple[float, str, int, int]]:
-        """Create note_on and note_off events with proper timing."""
+        """Create note_on and note_off events with proper timing and natural release velocity."""
         midi_events = []
-        
+
         # Default note length based on track context
         default_note_length = 0.1  # Short notes for most sounds
-        
+
         for time, note, velocity in events:
             # Note on
             midi_events.append((time, 'note_on', note, velocity))
-            
-            # Note off - calculate appropriate length
+
+            # Note off - calculate appropriate length and release velocity
             note_length = self._calculate_note_length(note, velocity)
-            midi_events.append((time + note_length, 'note_off', note, velocity))
-            
+            release_velocity = self._calculate_release_velocity(velocity, note_length)
+            midi_events.append((time + note_length, 'note_off', note, release_velocity))
+
         # Sort by time
         midi_events.sort(key=lambda x: x[0])
         return midi_events
@@ -117,14 +119,43 @@ class MidiComposer:
         # Drum sounds (lower notes) - shorter
         if note < 50:
             return 0.05 + (velocity / 127.0) * 0.1
-        
-        # Bass notes - medium length  
+
+        # Bass notes - medium length
         elif note < 60:
             return 0.2 + (velocity / 127.0) * 0.3
-            
+
         # Higher notes - can be longer
         else:
             return 0.1 + (velocity / 127.0) * 0.4
+
+    def _calculate_release_velocity(self, attack_velocity: int, note_length: float) -> int:
+        """Calculate natural release velocity for note off events.
+
+        Args:
+            attack_velocity: Original note on velocity
+            note_length: Duration of the note in seconds
+
+        Returns:
+            Release velocity (40-80 for natural sound, 0 for very short notes)
+        """
+        # Very short notes (< 0.1s) - use traditional 0 velocity
+        if note_length < 0.1:
+            return 0
+
+        # Short notes (0.1-0.3s) - gentle release
+        elif note_length < 0.3:
+            # Scale from 40-60 based on attack velocity
+            return int(40 + (attack_velocity / 127.0) * 20)
+
+        # Medium notes (0.3-0.6s) - moderate release
+        elif note_length < 0.6:
+            # Scale from 50-70 based on attack velocity
+            return int(50 + (attack_velocity / 127.0) * 20)
+
+        # Long notes (>= 0.6s) - fuller release
+        else:
+            # Scale from 60-80 based on attack velocity
+            return int(60 + (attack_velocity / 127.0) * 20)
 
 
 class DrumMidiComposer(MidiComposer):

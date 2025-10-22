@@ -94,9 +94,11 @@ class SubBassGenerator:
                     # Add note with long sustain
                     events.append((note_time, note, final_velocity))
 
-                    # Note off after duration
+                    # Note off after duration with natural release velocity
+                    # Sub-bass has long releases, use 60-80 range
                     note_off_time = note_time + duration_beats * beat_duration
-                    events.append((note_off_time, note, 0))
+                    release_velocity = int(60 + (final_velocity / 127.0) * 20)  # Scale 60-80
+                    events.append((note_off_time, note, release_velocity))
 
             current_time += measure_duration
 
