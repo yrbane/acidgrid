@@ -1,0 +1,283 @@
+# ACIDGRID - TODO & Roadmap
+
+## 🎵 Génération Musicale
+
+### Priorité Haute
+
+- [ ] **Variations de fills et transitions**
+  - Ajouter des fills de batterie automatiques aux transitions (fin de sections)
+  - Détection automatique des changements de section
+  - Patterns de tom rolls, crash accents, snare fills
+
+- [ ] **Swing/Groove paramétrable**
+  - Option `--swing 0.0-1.0` pour décaler les hi-hats et créer du groove
+  - Support shuffle/triplet feel
+  - Application sélective par instrument
+
+- [ ] **Modulation de vélocité avancée**
+  - Patterns de vélocité plus organiques (accent sur temps forts)
+  - Humanisation aléatoire des vélocités
+  - Curves de vélocité par style (aggressive, laid-back, etc.)
+
+- [ ] **Patterns de hi-hat rolls**
+  - Pour trap/drum&bass, rolls automatiques en fin de mesures
+  - Densité progressive (1/8 → 1/16 → 1/32)
+  - Velocity ramps pour rolls naturels
+
+### Priorité Moyenne
+
+- [ ] **Effets de glide/portamento**
+  - Pour les basslines (CC5 en MIDI)
+  - Effet 303 plus authentique avec glide time paramétrable
+  - Support des différents types de glide (legato, always, etc.)
+
+- [ ] **Note off avec vélocité**
+  - Simulation de release pour sons plus naturels
+  - Support MIDI note off velocity
+  - Variations organiques du release
+
+- [ ] **Polyrythmie**
+  - Certains instruments en 3/4 ou 5/4 sur fond 4/4
+  - Spécial pour IDM/experimental
+  - Polyrhythmic patterns configurables
+
+- [ ] **Accords enrichis**
+  - 7ème, 9ème, sus2/sus4 pour synth accompaniment
+  - Extensions jazz (11ème, 13ème)
+  - Voicings plus sophistiqués
+
+---
+
+## 🎛️ Fonctionnalités CLI
+
+### Priorité Haute
+
+- [ ] **Mode interactif**
+  - `acidgrid --interactive` pour choisir style, tempo, mesures avec un menu
+  - Interface TUI (Terminal UI) avec curses ou rich
+  - Preview en temps réel
+
+- [ ] **Presets nommés**
+  - `acidgrid --preset "berlin-warehouse"` avec configurations pré-définies
+  - Fichiers de preset JSON/YAML
+  - Presets par défaut pour chaque style
+  - Création de presets utilisateur
+
+- [ ] **Export multi-formats**
+  - Option `--format smf0` pour MIDI type 0 (compatibility)
+  - Support MIDI type 0 et type 1
+  - Option pour nombre de ticks per quarter note
+
+- [ ] **Reproductibilité avancée**
+  - `acidgrid --seed 12345 --style house` déjà implémenté
+  - Documenter le système de seed
+  - Option `--save-config` pour sauvegarder paramètres exacts
+
+### Priorité Moyenne
+
+- [ ] **Batch generation**
+  - `acidgrid --batch 10 --style techno` pour générer 10 tracks d'un coup
+  - Progress bar pour batch jobs
+  - Génération parallèle multi-thread
+
+- [ ] **Paramètres par track**
+  - `--bass-intensity 0.8 --rhythm-complexity 0.6`
+  - Contrôle fin de chaque générateur
+  - Override des defaults par style
+
+- [ ] **Template de structure**
+  - `--structure custom:intro=16,drop=32,break=16`
+  - Format lisible pour structures custom
+  - Sauvegarde de structures favorites
+
+- [ ] **Export séparé des tracks**
+  - `--split-tracks` pour 5 fichiers MIDI séparés
+  - Un fichier par instrument/track
+  - Naming automatique (rhythm.mid, bass.mid, etc.)
+
+---
+
+## 🎹 Intégration DAW
+
+### Priorité Haute
+
+- [ ] **Amélioration Ableton**
+  - Ajouter générateur de scènes complètes (8 clips différents)
+  - Mode "session view fill" automatique
+  - Génération de variations du même style
+
+- [ ] **Mapping avancé**
+  - Encoder rotary pour tempo/measures en temps réel
+  - Support Push 2/3 avec écran
+  - Feedback visuel sur contrôleurs
+
+- [ ] **FL Studio integration**
+  - Script Python similaire pour FL Studio
+  - Génération dans playlist/piano roll
+  - Support channel rack
+
+### Priorité Basse
+
+- [ ] **Bitwig integration**
+  - Remote Script pour Bitwig Studio
+  - Support de la modulation Bitwig
+
+- [ ] **Logic Pro**
+  - AppleScript pour créer des régions MIDI
+  - Integration avec Logic Remote
+  - Template de projet Logic
+
+---
+
+## 🔊 Export Audio
+
+### Priorité Haute
+
+- [ ] **Preview avec FluidSynth amélioré**
+  - `--play` utilise déjà pygame, améliorer avec soundfont configurable
+  - Chargement automatique de soundfonts
+  - Configuration persistante du soundfont préféré
+
+- [ ] **Export WAV/MP3**
+  - `acidgrid --style techno --render output.wav` avec FluidSynth
+  - Support MP3, OGG, FLAC
+  - Contrôle de la qualité d'export
+
+- [ ] **Soundfont personnalisable**
+  - `--soundfont /path/to/sf2`
+  - Database de soundfonts (GM, techno-specific, etc.)
+  - Download automatique de soundfonts libres
+
+---
+
+## 📊 Visualisation
+
+### Priorité Moyenne
+
+- [ ] **Piano roll ASCII**
+  - Afficher un aperçu dans le terminal
+  - Vue compacte de la structure
+  - Highlight des patterns importants
+
+- [ ] **Export PNG/SVG**
+  - Piano roll visuel avec matplotlib
+  - Vue multi-track
+  - Coloration par vélocité
+
+- [ ] **Spectrogramme**
+  - Pour preview audio
+  - Analyse fréquentielle
+  - Détection de problèmes (frequencies masking, etc.)
+
+---
+
+## 🧪 Qualité & Tests
+
+### Priorité Haute
+
+- [ ] **Tests unitaires**
+  - pytest pour tous les générateurs
+  - Coverage > 80%
+  - Tests de régression
+
+- [ ] **Tests d'intégration**
+  - Validation des fichiers MIDI générés
+  - Tests de tous les styles
+  - Validation de la structure MIDI (valid smf)
+
+- [ ] **CI/CD**
+  - GitHub Actions pour tests automatiques
+  - Tests sur Python 3.7, 3.8, 3.9, 3.10, 3.11
+  - Build et test sur Linux, macOS, Windows
+
+### Priorité Moyenne
+
+- [ ] **Linting**
+  - black pour formatting automatique
+  - flake8 pour style guide
+  - mypy pour type checking
+  - pre-commit hooks
+
+- [ ] **Documentation**
+  - Docstrings complètes (Google/NumPy style)
+  - sphinx pour docs HTML
+  - Publish sur Read The Docs
+  - Tutoriels et exemples
+
+- [ ] **Benchmarks**
+  - Mesurer performance de génération
+  - Optimisation des hotspots
+  - Profiling avec cProfile
+
+---
+
+## 🚀 Fonctionnalités Avancées
+
+### Priorité Basse
+
+- [ ] **Machine Learning**
+  - Analyser des tracks existantes pour extraire patterns
+  - Training sur MIDI dataset
+  - Style transfer entre genres
+  - Génération conditionnelle (GPT-like pour MIDI)
+
+- [ ] **Web UI**
+  - Interface web Flask/Django pour génération
+  - Preview audio dans le browser
+  - Sharing de tracks générées
+  - Gallery de presets communautaires
+
+- [ ] **VST Plugin**
+  - Plugin VST/AU pour utilisation directe en DAW
+  - Interface graphique native
+  - Automation de paramètres
+  - Support VST3, AU, AAX
+
+- [ ] **Cloud API**
+  - Service REST pour génération à distance
+  - Rate limiting et authentication
+  - Queue system pour batch jobs
+  - WebSocket pour génération en temps réel
+
+---
+
+## 💎 Top 5 Recommandations (Quick Wins)
+
+**Si tu veux améliorer rapidement, commence par celles-ci:**
+
+1. **Swing/Groove paramétrable** (`--swing 0.0-1.0`)
+   - Impact musical énorme
+   - Relativement simple à implémenter
+   - Transforme complètement le feel
+
+2. **Mode interactif**
+   - Meilleure UX pour découvrir le tool
+   - Plus accessible pour nouveaux utilisateurs
+   - Démo/showcase plus impressionnant
+
+3. **Fills de transition**
+   - Rend les tracks beaucoup plus professionnelles
+   - Ajoute dynamique et surprise
+   - Authentique des vraies productions
+
+4. **Tests unitaires**
+   - Solidifie le projet
+   - Permet refactoring en confiance
+   - Prévient les régressions
+
+5. **Export WAV avec soundfont**
+   - Permet d'écouter sans DAW
+   - Sharing plus facile
+   - Preview instantané de qualité
+
+---
+
+## 📝 Notes
+
+- Les features marquées [EXPERIMENTAL] sont des idées à valider
+- Priorité peut changer selon les retours utilisateurs
+- Certaines features peuvent être implémentées par la communauté (PRs welcome)
+
+---
+
+**Dernière mise à jour:** 2025-10-19

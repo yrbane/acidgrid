@@ -70,6 +70,11 @@ def main():
         action="store_true",
         help="Check if MIDI synthesizer is available and show installation instructions"
     )
+    parser.add_argument(
+        "--swing",
+        type=float,
+        help="Swing/groove amount 0.0-1.0 (0.0=straight, 0.5=triplet, 1.0=max swing). If not specified, uses style default"
+    )
 
     args = parser.parse_args()
 
@@ -90,6 +95,14 @@ def main():
     # Determine tempo based on style or user input
     tempo = get_style_tempo(args.style, args.tempo)
     print(f"Tempo: {tempo} BPM (range for {style.name}: {style.tempo_range[0]}-{style.tempo_range[1]})")
+
+    # Determine swing amount
+    if args.swing is not None:
+        swing = max(0.0, min(1.0, args.swing))  # Clamp to 0.0-1.0
+        print(f"Swing: {swing:.2f} (user-specified)")
+    else:
+        swing = style.default_swing
+        print(f"Swing: {swing:.2f} (style default)")
 
     # Always use a unique seed based on time unless explicitly specified
     if args.seed is not None:
@@ -118,7 +131,7 @@ def main():
     print(f"Song structure: {', '.join([s.name for s in song_structure.sections])}")
 
     # Initialize generators with song structure and style
-    rhythm_gen = RhythmGenerator(song_structure, style=style)
+    rhythm_gen = RhythmGenerator(song_structure, style=style, swing=swing)
     bassline_gen = BasslineGenerator(song_structure, style=style)
     sub_bass_gen = SubBassGenerator(song_structure, style=style)
     synth_accomp_gen = SynthAccompanimentGenerator(song_structure, style=style)
@@ -127,7 +140,7 @@ def main():
     # Generate tracks
     print(f"Generating {args.measures} measures at {tempo} BPM...")
 
-    rhythm_track = rhythm_gen.generate(args.measures, tempo)
+    rhythm_track = rhythm_gen.generate(args.measures, tempo, swing=swing)
     bassline_track = bassline_gen.generate(args.measures, tempo)
     sub_bass_track = sub_bass_gen.generate(args.measures, tempo)
     synth_accomp_track = synth_accomp_gen.generate(args.measures, tempo)

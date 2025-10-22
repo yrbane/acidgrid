@@ -15,6 +15,7 @@ class MusicStyle:
     structure_type: str  # Type of song structure
     intensity_curve: str  # How intensity evolves
     synth_density: float  # 0.0 to 1.0 - how much synth activity
+    default_swing: float  # 0.0 to 1.0 - groove/swing amount
     description: str
 
 
@@ -29,6 +30,7 @@ MUSIC_STYLES = {
         structure_type="classic",
         intensity_curve="smooth",
         synth_density=0.8,
+        default_swing=0.3,  # Subtle swing for groove
         description="Classic house: four-on-the-floor, soulful, groovy"
     ),
 
@@ -41,6 +43,7 @@ MUSIC_STYLES = {
         structure_type="progressive",
         intensity_curve="building",
         synth_density=0.7,
+        default_swing=0.1,  # Minimal swing, mostly straight
         description="Techno: hypnotic, industrial, relentless energy"
     ),
 
@@ -53,6 +56,7 @@ MUSIC_STYLES = {
         structure_type="aggressive",
         intensity_curve="intense",
         synth_density=0.6,
+        default_swing=0.0,  # Straight, no swing
         description="Hard tekno: fast, aggressive, distorted, peak-time energy"
     ),
 
@@ -65,6 +69,7 @@ MUSIC_STYLES = {
         structure_type="breakbeat",
         intensity_curve="dynamic",
         synth_density=0.7,
+        default_swing=0.2,  # Light swing for funkiness
         description="Breakbeat: syncopated drums, funky, energetic"
     ),
 
@@ -77,6 +82,7 @@ MUSIC_STYLES = {
         structure_type="experimental",
         intensity_curve="erratic",
         synth_density=0.9,
+        default_swing=0.4,  # Variable swing for complexity
         description="IDM: intelligent, complex, glitchy, experimental"
     ),
 
@@ -89,6 +95,7 @@ MUSIC_STYLES = {
         structure_type="jungle",
         intensity_curve="frenetic",
         synth_density=0.6,
+        default_swing=0.35,  # Moderate swing, reggae influence
         description="Jungle: fast breakbeats, heavy bass, reggae influence"
     ),
 
@@ -101,6 +108,7 @@ MUSIC_STYLES = {
         structure_type="hip-hop",
         intensity_curve="laid_back",
         synth_density=0.5,
+        default_swing=0.5,  # Strong swing for boom-bap feel
         description="Hip-hop: laid back, boom bap, groovy"
     ),
 
@@ -113,6 +121,7 @@ MUSIC_STYLES = {
         structure_type="trap",
         intensity_curve="trap_wave",
         synth_density=0.7,
+        default_swing=0.1,  # Minimal swing, modern feel
         description="Trap: 808 bass, hi-hat rolls, modern urban sound"
     ),
 
@@ -125,6 +134,7 @@ MUSIC_STYLES = {
         structure_type="ambient",
         intensity_curve="atmospheric",
         synth_density=0.9,
+        default_swing=0.0,  # No swing, sparse and atmospheric
         description="Ambient: atmospheric, sparse, meditative, textural"
     ),
 
@@ -137,6 +147,7 @@ MUSIC_STYLES = {
         structure_type="dnb",
         intensity_curve="energetic",
         synth_density=0.7,
+        default_swing=0.2,  # Light swing for groove
         description="Drum & Bass: fast breakbeats, deep bass, high energy"
     ),
 }

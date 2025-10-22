@@ -69,9 +69,10 @@ class RhythmGenerator:
     OPEN_TRIANGLE = 81  # A5 - Open Triangle
     SHAKER = 82         # A#5 - Shaker (often mapped here in modern kits)
     
-    def __init__(self, song_structure=None, style=None):
+    def __init__(self, song_structure=None, style=None, swing=0.0):
         self.song_structure = song_structure
         self.style = style
+        self.swing = swing
         self.patterns = self._create_patterns()
         self.current_pattern_index = 0
     
@@ -132,10 +133,13 @@ class RhythmGenerator:
             }
         }
     
-    def generate(self, measures: int, tempo: int) -> List[Tuple[float, int, int]]:
-        """Generate a dynamic rhythm track with velocity automation."""
+    def generate(self, measures: int, tempo: int, swing=None) -> List[Tuple[float, int, int]]:
+        """Generate a dynamic rhythm track with velocity automation and optional swing."""
         events = []
-        
+
+        # Use provided swing or instance swing
+        swing_amount = swing if swing is not None else self.swing
+
         # Calculate timing
         beats_per_measure = 4
         sixteenth_notes_per_beat = 4
@@ -177,11 +181,19 @@ class RhythmGenerator:
             # Generate events for this measure
             for step in range(steps_per_measure):
                 step_time = current_time + (step * step_duration)
-                
+
+                # Apply swing to off-beat notes (odd-numbered steps)
+                if swing_amount > 0 and step % 2 == 1:
+                    # Swing delay: shift off-beats later by swing_amount
+                    # At swing=0.5, off-beats move to triplet position
+                    # At swing=1.0, off-beats move to maximum shuffle
+                    swing_delay = (step_duration * swing_amount) * 0.5
+                    step_time += swing_delay
+
                 # Add crash on important transitions
                 if step == 0 and self._should_add_crash(measure):
                     events.append((step_time, self.CRASH, random.randint(90, 127)))
-                
+
                 # Generate drum hits with dynamic velocity
                 events.extend(self._generate_drum_hits(
                     modified_pattern, step, step_time, intensity, measure
@@ -279,32 +291,254 @@ class RhythmGenerator:
     
     def _add_tom_patterns(self, pattern, measure, intensity):
         """Add tom patterns for fills and variations."""
-        # Tom fills every 8 measures
-        if measure % 8 == 7:
-            # Clear pattern for fill
-            for i in range(12, 16):
-                pattern["hh"][i] = 0
-                pattern["oh"][i] = 0
+        # Check if we're at a section transition
+        is_transition = self._is_section_transition(measure)
 
-            # Add tom roll
-            if random.random() < 0.7:
-                pattern["high_tom"] = [0]*12 + [1, 0, 0, 0]
-                pattern["mid_tom"] = [0]*12 + [0, 1, 1, 0]
-                pattern["low_tom"] = [0]*12 + [0, 0, 0, 1]
+        # Different fill strategies
+        if is_transition:
+            # Major transition fill (section change)
+            fill_type = self._choose_fill_type(measure, intensity)
+            self._generate_fill(pattern, fill_type, intensity, measure)
+        elif measure % 8 == 7:
+            # Regular 8-bar fill
+            fill_type = self._choose_fill_type(measure, intensity, major=False)
+            self._generate_fill(pattern, fill_type, intensity, measure)
+        elif measure % 4 == 3 and random.random() < 0.4:
+            # Light 4-bar variation
+            self._add_light_fill(pattern, intensity)
         else:
-            # Q&A pattern between toms and claps
+            # Initialize tom patterns
             pattern["high_tom"] = [0] * 16
             pattern["mid_tom"] = [0] * 16
             pattern["low_tom"] = [0] * 16
 
+            # Occasional tom accents
             if measure % 2 == 0 and random.random() < 0.3:
-                # Tom question
                 pattern["low_tom"][4] = 1
                 pattern["mid_tom"][6] = 1
                 pattern["high_tom"][7] = 1
 
         # Add style-specific percussion layers
         self._add_style_percussion(pattern, measure, intensity)
+
+    def _is_section_transition(self, measure):
+        """Check if this measure is at a section boundary."""
+        if not self.song_structure:
+            return False
+
+        if measure == 0:
+            return False
+
+        current_section = self.song_structure.get_section(measure)
+        prev_section = self.song_structure.get_section(measure - 1)
+
+        # Check if we're transitioning to a new section
+        if current_section != prev_section:
+            return True
+
+        # Check if we're one measure before section change (pre-fill)
+        if measure + 1 < self.song_structure.total_measures:
+            next_section = self.song_structure.get_section(measure + 1)
+            if current_section != next_section:
+                return True
+
+        return False
+
+    def _choose_fill_type(self, measure, intensity, major=True):
+        """Choose appropriate fill type based on style, intensity, and context."""
+        style_name = self.style.name if self.style and hasattr(self.style, 'name') else 'techno'
+
+        # Style-specific fill preferences
+        fill_styles = {
+            'house': ['tom_roll', 'snare_build', 'light_percussion'],
+            'techno': ['tom_roll', 'snare_build', 'crash_accent'],
+            'hard-tekno': ['aggressive_roll', 'double_snare', 'crash_accent'],
+            'breakbeat': ['snare_roll', 'tom_cascade', 'light_percussion'],
+            'idm': ['glitch_fill', 'tom_scatter', 'sparse_accent'],
+            'jungle': ['snare_roll', 'tom_cascade', 'aggressive_roll'],
+            'hip-hop': ['snare_triplet', 'light_percussion', 'sparse_accent'],
+            'trap': ['snare_roll', 'crash_accent', 'sparse_accent'],
+            'ambient': ['sparse_accent', 'light_percussion', 'cymbal_swell'],
+            'drum&bass': ['snare_roll', 'aggressive_roll', 'tom_cascade'],
+        }
+
+        available_fills = fill_styles.get(style_name, ['tom_roll', 'snare_build', 'crash_accent'])
+
+        # Intensity affects fill choice
+        if major and intensity > 0.7:
+            # Prefer more intense fills for high-energy transitions
+            intense_fills = ['aggressive_roll', 'snare_roll', 'tom_cascade', 'double_snare']
+            available_fills = [f for f in available_fills if f in intense_fills] or intense_fills
+        elif intensity < 0.4:
+            # Subtle fills for low intensity
+            subtle_fills = ['light_percussion', 'sparse_accent', 'cymbal_swell']
+            available_fills = [f for f in available_fills if f in subtle_fills] or subtle_fills
+
+        return random.choice(available_fills)
+
+    def _generate_fill(self, pattern, fill_type, intensity, measure):
+        """Generate specific fill pattern based on type."""
+        # Clear last beat for fill space
+        for i in range(12, 16):
+            pattern["hh"][i] = 0
+            pattern["oh"][i] = 0
+
+        # Initialize tom patterns
+        pattern["high_tom"] = [0] * 16
+        pattern["mid_tom"] = [0] * 16
+        pattern["low_tom"] = [0] * 16
+
+        if fill_type == 'tom_roll':
+            # Classic descending tom roll
+            pattern["high_tom"][12] = 1
+            pattern["high_tom"][13] = 1
+            pattern["mid_tom"][13] = 1
+            pattern["mid_tom"][14] = 1
+            pattern["low_tom"][14] = 1
+            pattern["low_tom"][15] = 1
+
+        elif fill_type == 'tom_cascade':
+            # Cascading toms (jungle/dnb style)
+            pattern["high_tom"] = [0]*10 + [1, 0, 1, 1, 0, 1]
+            pattern["mid_tom"] = [0]*11 + [1, 0, 1, 0, 1]
+            pattern["low_tom"] = [0]*12 + [0, 1, 1, 1]
+
+        elif fill_type == 'snare_roll':
+            # Fast snare roll (16th notes)
+            pattern["sd"] = pattern["sd"][:12] + [1, 1, 1, 1]
+
+        elif fill_type == 'snare_build':
+            # Building snare pattern
+            pattern["sd"] = pattern["sd"][:12] + [1, 0, 1, 1]
+            pattern["clap"] = pattern["clap"][:12] + [0, 1, 1, 1]
+
+        elif fill_type == 'aggressive_roll':
+            # Intense snare + tom roll (hard-tekno/dnb)
+            pattern["sd"] = pattern["sd"][:10] + [1, 1, 1, 1, 1, 1]
+            pattern["high_tom"] = [0]*12 + [1, 0, 1, 0]
+            pattern["low_tom"] = [0]*13 + [0, 1, 1]
+
+        elif fill_type == 'double_snare':
+            # Double snare hits
+            pattern["sd"] = pattern["sd"][:12] + [1, 1, 0, 1]
+            pattern["clap"] = pattern["clap"][:12] + [1, 1, 0, 1]
+
+        elif fill_type == 'snare_triplet':
+            # Triplet feel snare (hip-hop)
+            pattern["sd"] = pattern["sd"][:12] + [1, 0, 1, 0]
+
+        elif fill_type == 'light_percussion':
+            # Subtle percussion fill
+            pattern["rim"] = [0]*12 + [1, 0, 1, 0]
+            pattern["tambourine"] = [0]*13 + [0, 1, 1]
+
+        elif fill_type == 'crash_accent':
+            # Crash cymbal accent
+            pattern["crash"] = [0]*15 + [1]
+            pattern["sd"] = pattern["sd"][:14] + [1, 0]
+
+        elif fill_type == 'sparse_accent':
+            # Minimal accent (ambient/minimal)
+            pattern["rim"] = [0]*14 + [1, 0]
+
+        elif fill_type == 'cymbal_swell':
+            # Cymbal-based fill (ambient)
+            pattern["crash"] = [0]*12 + [0, 0, 1, 0]
+            pattern["ride"] = [0]*13 + [1, 0, 1]
+
+        elif fill_type == 'glitch_fill':
+            # Randomized glitchy fill (IDM)
+            for i in range(12, 16):
+                if random.random() < 0.6:
+                    choice = random.choice(['sd', 'rim', 'high_tom'])
+                    pattern[choice][i] = 1
+
+        elif fill_type == 'tom_scatter':
+            # Scattered tom hits
+            pattern["high_tom"][12] = 1
+            pattern["mid_tom"][13] = 1 if random.random() < 0.7 else 0
+            pattern["low_tom"][14] = 1
+            pattern["high_tom"][15] = 1 if random.random() < 0.5 else 0
+
+    def _add_light_fill(self, pattern, intensity):
+        """Add subtle fill variation for 4-bar phrases."""
+        pattern["high_tom"] = [0] * 16
+        pattern["mid_tom"] = [0] * 16
+        pattern["low_tom"] = [0] * 16
+
+        # Light accent on last beat
+        if random.random() < 0.6:
+            pattern["rim"] = pattern.get("rim", [0]*16)
+            pattern["rim"][14] = 1
+
+        # Occasional tom accent
+        if random.random() < 0.4:
+            pattern["low_tom"][15] = 1
+
+    def _add_hihat_rolls(self, pattern, measure, intensity, style_name):
+        """Add sophisticated hi-hat rolls for trap and drum&bass."""
+        # Determine if this measure should have a roll
+        should_roll = False
+        roll_type = "short"
+
+        if style_name == 'trap':
+            # Trap: rolls on measure 4, 8, 12, 16 (every 4 bars, on last bar)
+            if measure % 4 == 3:
+                should_roll = random.random() < 0.8  # 80% chance
+                roll_type = random.choice(["short", "medium", "long"])
+            # Occasional surprise rolls
+            elif random.random() < 0.15:
+                should_roll = True
+                roll_type = "short"
+
+        elif style_name in ['jungle', 'drum&bass']:
+            # DnB: more frequent, faster rolls
+            if measure % 2 == 1:
+                should_roll = random.random() < 0.6  # 60% chance every 2 bars
+                roll_type = random.choice(["medium", "long", "ultra"])
+            elif intensity > 0.7 and random.random() < 0.3:
+                should_roll = True
+                roll_type = "short"
+
+        if not should_roll:
+            return
+
+        # Generate roll pattern based on type
+        if roll_type == "short":
+            # Last beat only: 1/16 notes
+            # Pattern: [0,0,0,0, 0,0,0,0, 0,0,0,0, 1,1,1,1]
+            for i in range(12, 16):
+                pattern["hh"][i] = 1
+
+        elif roll_type == "medium":
+            # Last 2 beats: increasing density
+            # Pattern: [0,0,0,0, 0,0,0,0, 1,0,1,0, 1,1,1,1]
+            pattern["hh"][8] = 1
+            pattern["hh"][10] = 1
+            for i in range(12, 16):
+                pattern["hh"][i] = 1
+
+        elif roll_type == "long":
+            # Last 3 beats: progressive build
+            # Pattern: [0,0,0,0, 1,0,0,1, 1,0,1,0, 1,1,1,1]
+            pattern["hh"][4] = 1
+            pattern["hh"][7] = 1
+            pattern["hh"][8] = 1
+            pattern["hh"][10] = 1
+            for i in range(12, 16):
+                pattern["hh"][i] = 1
+
+        elif roll_type == "ultra":
+            # Full bar roll (DnB style): maximum density
+            # Pattern: fills entire second half with 1/16 notes
+            for i in range(8, 16):
+                pattern["hh"][i] = 1
+
+        # Mark that this pattern has a roll (for velocity ramping)
+        pattern["_hihat_roll"] = {
+            "type": roll_type,
+            "start": 12 if roll_type == "short" else (8 if roll_type == "medium" else 4)
+        }
 
     def _add_style_percussion(self, pattern, measure, intensity):
         """Add style-specific percussion layers."""
@@ -353,7 +587,7 @@ class RhythmGenerator:
                 pattern["wood_block"] = [random.randint(0, 1) for _ in range(16)]
                 pattern["claves"] = [random.randint(0, 1) if random.random() < 0.3 else 0 for _ in range(16)]
 
-        # Jungle/DnB: Massive percussion density
+        # Jungle/DnB: Massive percussion density + hi-hat rolls
         elif style_name in ['jungle', 'drum&bass']:
             if random.random() < 0.7:
                 pattern["conga_low"] = [0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0]
@@ -361,6 +595,8 @@ class RhythmGenerator:
             if random.random() < 0.5:
                 pattern["agogo_hi"] = [0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0]
                 pattern["agogo_low"] = [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0]
+            # DnB hi-hat rolls
+            self._add_hihat_rolls(pattern, measure, intensity, style_name)
 
         # Hip-hop: Minimal, boom bap style
         elif style_name == 'hip-hop':
@@ -369,10 +605,8 @@ class RhythmGenerator:
 
         # Trap: Hi-hat rolls and minimal percussion
         elif style_name == 'trap':
-            # Trap hi-hat rolls
-            if measure % 4 == 3 and random.random() < 0.7:
-                # Hi-hat roll in last beat
-                pattern["hh"] = pattern["hh"][:12] + [1, 1, 1, 1]
+            # Advanced trap hi-hat rolls
+            self._add_hihat_rolls(pattern, measure, intensity, style_name)
             if random.random() < 0.3:
                 pattern["cowbell"] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0]
 
@@ -384,7 +618,7 @@ class RhythmGenerator:
                 pattern["chimes"] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0]
     
     def _generate_drum_hits(self, pattern, step, step_time, intensity, measure):
-        """Generate individual drum hits with dynamic velocity."""
+        """Generate individual drum hits with advanced velocity modulation."""
         events = []
 
         # Base velocities modified by intensity
@@ -416,6 +650,12 @@ class RhythmGenerator:
             "triangle": 60,
             "chimes": 70,
         }
+
+        # Accent patterns - which steps get emphasized
+        accent_pattern = self._get_accent_pattern(step)
+
+        # Ghost note probability by instrument
+        ghost_note_instruments = {"sd", "hh", "rim"}  # Instruments that can have ghost notes
 
         # Velocity curves for different drums
         velocity_curves = {
@@ -479,23 +719,110 @@ class RhythmGenerator:
         
         for drum_name, midi_note in drum_map.items():
             if drum_name in pattern and len(pattern[drum_name]) > step and pattern[drum_name][step]:
-                # Calculate velocity with curve
+                # Calculate base velocity with curve
                 base_vel = base_velocities[drum_name]
                 curve_mod = velocity_curves[drum_name](intensity, measure)
-                
+
+                # Start with base velocity
+                final_vel = base_vel * curve_mod * intensity
+
+                # Check for hi-hat roll velocity ramp
+                if drum_name == "hh" and "_hihat_roll" in pattern:
+                    roll_info = pattern["_hihat_roll"]
+                    if step >= roll_info["start"]:
+                        # Progressive velocity ramp for rolls
+                        steps_in_roll = step - roll_info["start"]
+                        max_roll_steps = 16 - roll_info["start"]
+                        ramp_factor = 0.5 + (steps_in_roll / max_roll_steps) * 0.7  # 0.5 → 1.2
+                        final_vel *= ramp_factor
+
+                # Apply accent boost (only if not in a roll)
+                elif accent_pattern['strong_accent']:
+                    final_vel *= 1.25  # +25% for strong accents (downbeats)
+                elif accent_pattern['medium_accent']:
+                    final_vel *= 1.12  # +12% for medium accents (beats 2 and 4)
+
+                # Ghost notes for specific instruments (style-dependent)
+                if drum_name in ghost_note_instruments and accent_pattern['ghost_note_candidate']:
+                    if self._should_add_ghost_note(drum_name):
+                        final_vel *= 0.35  # Very low velocity for ghost notes
+
                 # Apply song structure velocity modification
                 if self.song_structure:
-                    final_vel = self.song_structure.get_velocity_curve(measure, int(base_vel * curve_mod))
+                    final_vel = self.song_structure.get_velocity_curve(measure, int(final_vel))
                 else:
-                    final_vel = int(base_vel * curve_mod * intensity)
-                
-                # Add subtle random humanization
-                final_vel += random.randint(-5, 5)
+                    final_vel = int(final_vel)
+
+                # Advanced humanization based on style
+                humanization = self._get_humanization_amount()
+                final_vel += random.randint(-humanization, humanization)
+
+                # Clamp to valid MIDI range
                 final_vel = max(1, min(127, final_vel))
-                
+
                 events.append((step_time, midi_note, final_vel))
-        
+
         return events
+
+    def _get_accent_pattern(self, step):
+        """Determine accent type for a given step position."""
+        # 16th note grid: 0-15
+        # Strong accents: steps 0, 4, 8, 12 (downbeats)
+        # Medium accents: steps 2, 6, 10, 14 (backbeats)
+        # Ghost note candidates: steps 1, 3, 5, 7, 9, 11, 13, 15 (off-beats)
+
+        return {
+            'strong_accent': step % 4 == 0,  # Every quarter note
+            'medium_accent': step % 4 == 2,  # On the "and" of each beat
+            'ghost_note_candidate': step % 2 == 1,  # All off-beats
+        }
+
+    def _should_add_ghost_note(self, drum_name):
+        """Determine if a ghost note should be added based on style."""
+        if not self.style:
+            return False
+
+        style_name = self.style.name if hasattr(self.style, 'name') else 'techno'
+
+        # Style-specific ghost note probabilities
+        ghost_note_probs = {
+            'hip-hop': 0.6,  # Lots of ghost notes for groove
+            'jungle': 0.5,
+            'drum&bass': 0.4,
+            'breakbeat': 0.5,
+            'house': 0.2,
+            'techno': 0.1,  # Minimal ghost notes
+            'hard-tekno': 0.0,  # No ghost notes
+            'idm': 0.3,
+            'trap': 0.2,
+            'ambient': 0.0,
+        }
+
+        prob = ghost_note_probs.get(style_name, 0.2)
+        return random.random() < prob
+
+    def _get_humanization_amount(self):
+        """Get humanization amount based on style."""
+        if not self.style:
+            return 5
+
+        style_name = self.style.name if hasattr(self.style, 'name') else 'techno'
+
+        # Style-specific humanization (velocity variation)
+        humanization_amounts = {
+            'hip-hop': 12,  # High variation for organic feel
+            'jungle': 10,
+            'drum&bass': 8,
+            'breakbeat': 10,
+            'idm': 15,  # Very high variation for glitchy feel
+            'house': 7,
+            'techno': 5,  # Low variation, more mechanical
+            'hard-tekno': 3,  # Very low, machine-like
+            'trap': 6,
+            'ambient': 8,
+        }
+
+        return humanization_amounts.get(style_name, 5)
     
     def _should_add_crash(self, measure):
         """Determine if a crash should be added."""
