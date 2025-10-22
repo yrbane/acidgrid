@@ -19,6 +19,7 @@ from .midi_output import MidiComposer, DrumMidiComposer
 from .song_structure import SongStructure
 from .midi_player import MidiPlayer, check_synth_available, install_synth_instructions
 from .music_styles import get_style, get_available_styles, get_style_tempo
+from .interactive import interactive_mode
 
 
 def main():
@@ -75,8 +76,28 @@ def main():
         type=float,
         help="Swing/groove amount 0.0-1.0 (0.0=straight, 0.5=triplet, 1.0=max swing). If not specified, uses style default"
     )
+    parser.add_argument(
+        "--interactive",
+        "-i",
+        action="store_true",
+        help="Launch interactive mode with menu to choose all parameters"
+    )
 
     args = parser.parse_args()
+
+    # Interactive mode - launch TUI
+    if args.interactive:
+        config = interactive_mode()
+        if config is None:
+            # User cancelled
+            return
+
+        # Override args with interactive config
+        args.style = config['style']
+        args.tempo = config.get('tempo')
+        args.measures = config['measures']
+        args.swing = config.get('swing')
+        args.seed = config.get('seed')
 
     # Check synthesizer if requested
     if args.check_synth:
