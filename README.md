@@ -80,6 +80,13 @@ Every track gets an authentic name matching its style:
 - **Ambient**: "Dissolving Reflections", "Ocean at Dusk"
 - **IDM**: "draft_20_c", "buffer.overflow", "untitled_042"
 
+### 🎛️ Interactive Mode & Audio Export
+- **🎨 Interactive TUI**: Beautiful terminal interface with rich styling for easy parameter selection
+- **🔊 Audio Export**: Render MIDI to audio files (WAV, MP3, OGG, FLAC) using FluidSynth
+- **🎹 Custom SoundFonts**: Use any .sf2 SoundFont for personalized sounds
+- **⚡ High-Quality Rendering**: Up to 96kHz sample rate, configurable gain
+- **🎧 Instant Preview**: Play tracks directly in terminal with MIDI synthesizer
+
 ## 🚀 Installation
 
 ### Standard Installation
@@ -96,6 +103,36 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 pip install -e .
+```
+
+### 🔊 Audio Export Setup (Optional)
+
+To export tracks to audio files (WAV/MP3/OGG/FLAC), install FluidSynth:
+
+**Linux (Debian/Ubuntu):**
+```bash
+sudo apt install fluidsynth fluid-soundfont-gm ffmpeg
+```
+
+**Linux (Arch):**
+```bash
+sudo pacman -S fluidsynth soundfont-fluid ffmpeg
+```
+
+**macOS:**
+```bash
+brew install fluidsynth ffmpeg
+```
+
+**Windows:**
+1. Download FluidSynth from [GitHub releases](https://github.com/FluidSynth/fluidsynth/releases)
+2. Download ffmpeg from [ffmpeg.org](https://ffmpeg.org/)
+3. Add both to your PATH
+4. Download a SoundFont (.sf2) file
+
+**Check installation:**
+```bash
+acidgrid --check-audio
 ```
 
 ### 🎹 Ableton Live Integration (Optional)
@@ -144,16 +181,34 @@ acidgrid --style drum&bass --measures 128
 ```
 
 ### Parameters
+
+#### Generation
 - `--style`: Music style (choices: house, techno, hard-tekno, breakbeat, idm, jungle, hip-hop, trap, ambient, drum&bass) - **default: techno**
 - `--measures`: Track length in measures - **default: 192**
 - `--tempo`: BPM (if not specified, uses style default)
-- `--output`: Output directory for MIDI files - **default: ./output/**
+- `--swing`: Swing/groove amount 0.0-1.0 (0.0=straight, 0.5=triplet, 1.0=max swing)
 - `--seed`: Force specific seed for reproducible generation (optional)
+- `--output`: Output directory for MIDI files - **default: ./output/**
+
+#### Interactive Mode
+- `--interactive`, `-i`: Launch interactive mode with menu to choose all parameters
+
+#### Audio Export (requires FluidSynth)
+- `--export-audio`: Export track to audio file (WAV/MP3/OGG/FLAC)
+- `--audio-format`: Audio format (choices: wav, mp3, ogg, flac) - **default: wav**
+- `--soundfont`: Path to custom SoundFont (.sf2) file
+- `--sample-rate`: Sample rate in Hz (choices: 22050, 44100, 48000, 96000) - **default: 44100**
+- `--gain`: Master gain for audio export, 0.0-10.0 - **default: 0.5**
+- `--check-audio`: Check audio export availability (FluidSynth, SoundFont, ffmpeg)
+
+#### Preview
 - `--play`: Play a preview of the generated track (requires MIDI synthesizer)
 - `--preview-duration`: Preview length in seconds - **default: 600**
 - `--check-synth`: Check MIDI synthesizer availability and show setup instructions
 
 ### Examples
+
+#### Basic Generation
 ```bash
 # Quick 32-bar house loop
 acidgrid --style house --measures 32
@@ -175,6 +230,39 @@ acidgrid --style techno --seed 1756577066200374
 
 # Generate trap with custom output location
 acidgrid --style trap --measures 64 --output ~/Music/ACIDGRID
+```
+
+#### Interactive Mode
+```bash
+# Launch beautiful interactive menu
+acidgrid --interactive
+
+# Or use shorthand
+acidgrid -i
+```
+
+#### Audio Export
+```bash
+# Check if audio export is available
+acidgrid --check-audio
+
+# Export techno track to WAV
+acidgrid --style techno --measures 64 --export-audio
+
+# Export house track to MP3 (320kbps)
+acidgrid --style house --export-audio --audio-format mp3
+
+# Export to high-quality FLAC
+acidgrid --style ambient --export-audio --audio-format flac --sample-rate 48000
+
+# Export with custom SoundFont
+acidgrid --style drum&bass --export-audio --soundfont ~/soundfonts/MyCustom.sf2
+
+# Export with higher gain for louder output
+acidgrid --style hard-tekno --export-audio --gain 0.8
+
+# Generate, export to MP3, and preview
+acidgrid --style trap --measures 32 --export-audio --audio-format mp3 --play
 ```
 
 ### Style Tempo Ranges

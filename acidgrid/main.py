@@ -20,6 +20,7 @@ from .song_structure import SongStructure
 from .midi_player import MidiPlayer, check_synth_available, install_synth_instructions
 from .music_styles import get_style, get_available_styles, get_style_tempo
 from .interactive import interactive_mode
+from .audio_export import AudioExporter, check_audio_export_available, show_audio_export_status
 
 
 def main():
@@ -82,6 +83,41 @@ def main():
         action="store_true",
         help="Launch interactive mode with menu to choose all parameters"
     )
+    parser.add_argument(
+        "--export-audio",
+        action="store_true",
+        help="Export track to audio file (requires FluidSynth)"
+    )
+    parser.add_argument(
+        "--audio-format",
+        type=str,
+        choices=['wav', 'mp3', 'ogg', 'flac'],
+        default='wav',
+        help="Audio export format (default: wav). MP3/OGG/FLAC require ffmpeg"
+    )
+    parser.add_argument(
+        "--soundfont",
+        type=str,
+        help="Path to SoundFont file (.sf2) for audio rendering"
+    )
+    parser.add_argument(
+        "--sample-rate",
+        type=int,
+        default=44100,
+        choices=[22050, 44100, 48000, 96000],
+        help="Audio sample rate in Hz (default: 44100)"
+    )
+    parser.add_argument(
+        "--gain",
+        type=float,
+        default=0.5,
+        help="Master gain for audio export, 0.0-10.0 (default: 0.5)"
+    )
+    parser.add_argument(
+        "--check-audio",
+        action="store_true",
+        help="Check audio export availability (FluidSynth, SoundFont, ffmpeg)"
+    )
 
     args = parser.parse_args()
 
@@ -107,6 +143,11 @@ def main():
         else:
             print("❌ No MIDI synthesizer found.")
             install_synth_instructions()
+        return
+
+    # Check audio export if requested
+    if args.check_audio:
+        show_audio_export_status()
         return
 
     # Get music style configuration
@@ -204,10 +245,33 @@ def main():
         mid.tracks.append(midi_track)
     
     mid.save(str(output_file))
-    
+
     print(f"Track saved: {output_file}")
     print("Generation complete!")
-    
+
+    # Export to audio if requested
+    if args.export_audio:
+        print()
+        exporter = AudioExporter(soundfont_path=args.soundfont)
+
+        # Determine output audio file
+        audio_file = output_file.with_suffix(f'.{args.audio_format}')
+
+        # Export with specified parameters
+        success = exporter.export_to_format(
+            midi_file=output_file,
+            output_file=audio_file,
+            format=args.audio_format,
+            sample_rate=args.sample_rate,
+            gain=args.gain
+        )
+
+        if success:
+            print(f"\n✅ Audio export successful!")
+            print(f"Audio file: {audio_file}")
+        else:
+            print(f"\n❌ Audio export failed")
+
     # Play preview if requested
     if args.play:
         player = MidiPlayer()
