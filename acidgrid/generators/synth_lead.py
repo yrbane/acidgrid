@@ -7,17 +7,9 @@ from typing import List, Tuple
 class SynthLeadGenerator:
     """Generates synth lead tracks for techno music."""
     
-    # Scales for lead melodies (MIDI note numbers)
-    SCALES = {
-        "A_minor": [57, 59, 60, 62, 64, 65, 67, 69, 71, 72],  # A3 to C5 natural minor
-        "A_minor_pentatonic": [57, 60, 62, 64, 67, 69, 72],   # A minor pentatonic
-        "D_minor": [62, 64, 65, 67, 69, 70, 72, 74, 76, 77],  # D4 to F5 natural minor  
-    }
-    
     def __init__(self, song_structure=None, style=None):
         self.song_structure = song_structure
         self.style = style
-        self.current_scale = "A_minor"
         
     def generate(self, measures: int, tempo: int) -> List[Tuple[float, int, int]]:
         """
@@ -42,7 +34,7 @@ class SynthLeadGenerator:
         
         for phrase_start in range(0, measures, phrase_length):
             phrase_end = min(phrase_start + phrase_length, measures)
-            
+
             # Get context from song structure
             if self.song_structure:
                 context = self.song_structure.get_harmonic_context(phrase_start)
@@ -51,13 +43,19 @@ class SynthLeadGenerator:
                 if not should_play:
                     continue
             else:
+                # Default context
+                context = {
+                    "key": "A_minor",
+                    "scale": [57, 59, 60, 62, 64, 65, 67, 69, 71, 72],  # A3-C5 natural minor
+                    "intensity": 0.7
+                }
                 intensity = 0.7
-            
+
             # Determine if this phrase should have lead melody
             if self._should_have_lead(phrase_start, measures, intensity):
                 melody_events = self._generate_lead_phrase(
                     phrase_start, phrase_end, current_time + phrase_start * beats_per_measure * beat_duration,
-                    beat_duration
+                    beat_duration, context
                 )
                 events.extend(melody_events)
         
@@ -77,11 +75,15 @@ class SynthLeadGenerator:
         else:
             return random.random() < 0.9
     
-    def _generate_lead_phrase(self, start_measure: int, end_measure: int, 
-                            start_time: float, beat_duration: float) -> List[Tuple[float, int, int]]:
+    def _generate_lead_phrase(self, start_measure: int, end_measure: int,
+                            start_time: float, beat_duration: float, context: dict) -> List[Tuple[float, int, int]]:
         """Generate lead melody for a phrase."""
         events = []
-        scale_notes = self.SCALES[self.current_scale]
+
+        # Use scale notes from harmonic context - extend to 2 octaves for lead
+        base_scale = context.get("scale", [57, 59, 60, 62, 64, 65, 67, 69, 71, 72])
+        # Extend scale across multiple octaves for lead melodies
+        scale_notes = base_scale + [n + 12 for n in base_scale[:5]]  # Add higher octave notes
         
         # Choose melody style for this phrase
         melody_style = self._choose_melody_style(start_measure)

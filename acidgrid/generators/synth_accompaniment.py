@@ -6,27 +6,41 @@ from typing import List, Tuple
 
 class SynthAccompanimentGenerator:
     """Generates synth accompaniment tracks for techno music."""
-    
-    # Chord progressions in different keys (MIDI note numbers)
-    CHORD_PROGRESSIONS = {
-        "A_minor": {
-            "Am": [57, 60, 64],    # A3, C4, E4
-            "F": [53, 57, 60],     # F3, A3, C4  
-            "C": [48, 52, 55],     # C3, E3, G3
-            "G": [55, 59, 62],     # G3, B3, D4
-        },
-        "D_minor": {
-            "Dm": [62, 65, 69],    # D4, F4, A4
-            "Bb": [58, 62, 65],    # Bb3, D4, F4
-            "F": [53, 57, 60],     # F3, A3, C4
-            "C": [48, 52, 55],     # C3, E3, G3
-        }
-    }
-    
+
     def __init__(self, song_structure=None, style=None):
         self.song_structure = song_structure
         self.style = style
-        self.current_key = "A_minor"
+
+    def _get_chord_notes(self, context: dict) -> List[int]:
+        """Build chord notes from harmonic context."""
+        scale = context.get("scale", [57, 59, 60, 62, 64, 65, 67, 69, 71, 72])
+        chord_name = context.get("chord", "i")
+
+        # Map chord symbols to scale degrees (0-indexed)
+        chord_patterns = {
+            "i": [0, 2, 4],      # root, minor 3rd, 5th (e.g., Am: A, C, E)
+            "ii": [1, 3, 5],     # supertonic minor
+            "III": [2, 4, 6],    # mediant major
+            "iv": [3, 5, 7],     # subdominant minor
+            "V": [4, 6, 1],      # dominant major (special: uses next octave for 7th)
+            "VI": [5, 7, 2],     # submediant major
+            "VII": [6, 1, 3],    # leading tone diminished
+            "bVII": [5, 7, 2],   # subtonic major (flat 7)
+        }
+
+        pattern = chord_patterns.get(chord_name, [0, 2, 4])
+
+        # Build chord using scale degrees
+        chord_notes = []
+        for degree in pattern:
+            if degree < len(scale):
+                chord_notes.append(scale[degree])
+            else:
+                # Wrap to next octave if needed
+                wrapped_degree = degree % len(scale)
+                chord_notes.append(scale[wrapped_degree] + 12)
+
+        return chord_notes
         
     def generate(self, measures: int, tempo: int) -> List[Tuple[float, int, int]]:
         """
@@ -40,15 +54,12 @@ class SynthAccompanimentGenerator:
             List of (time, note, velocity) tuples
         """
         events = []
-        
-        # Generate chord progression
-        chord_progression = self._generate_chord_progression(measures)
-        
+
         # Calculate timing
         beats_per_measure = 4
         current_time = 0.0
         beat_duration = 60.0 / tempo
-        
+
         for measure in range(measures):
             # Get context from song structure
             if self.song_structure:
@@ -59,52 +70,28 @@ class SynthAccompanimentGenerator:
                     current_time += beats_per_measure * beat_duration
                     continue
             else:
+                # Default context
+                context = {
+                    "key": "A_minor",
+                    "scale": [57, 59, 60, 62, 64, 65, 67, 69, 71, 72],
+                    "chord": "i",
+                    "intensity": 0.7
+                }
                 intensity = 0.7
-            
-            chord_name = chord_progression[measure % len(chord_progression)]
-            chord_notes = self.CHORD_PROGRESSIONS[self.current_key][chord_name]
-            
+
+            # Get chord notes from harmonic context
+            chord_notes = self._get_chord_notes(context)
+
             # Generate accompaniment pattern for this measure
             pattern_events = self._generate_accompaniment_pattern(
                 chord_notes, current_time, beat_duration, measure, intensity
             )
             events.extend(pattern_events)
-            
+
             current_time += beats_per_measure * beat_duration
-        
+
         return events
-    
-    def _generate_chord_progression(self, measures: int) -> List[str]:
-        """Generate chord progression for the track."""
-        if self.current_key == "A_minor":
-            # Common techno progressions in A minor
-            progressions = [
-                ["Am", "Am", "F", "G"],
-                ["Am", "F", "C", "G"], 
-                ["Am", "Am", "Am", "Am"],  # Minimal
-                ["Am", "F", "Am", "G"],
-            ]
-        else:
-            # D minor progressions
-            progressions = [
-                ["Dm", "Bb", "F", "C"],
-                ["Dm", "Dm", "Bb", "C"],
-                ["Dm", "Dm", "Dm", "Dm"],  # Minimal
-            ]
-        
-        # Choose progression and extend for full track
-        base_progression = random.choice(progressions)
-        full_progression = []
-        
-        for measure in range(measures):
-            # Every 16 measures, potentially change progression
-            if measure > 0 and measure % 16 == 0 and random.random() < 0.4:
-                base_progression = random.choice(progressions)
-            
-            full_progression.append(base_progression[measure % len(base_progression)])
-        
-        return full_progression
-    
+
     def _generate_accompaniment_pattern(self, chord_notes: List[int], start_time: float, 
                                       beat_duration: float, measure: int, intensity: float = 0.7) -> List[Tuple[float, int, int]]:
         """Generate accompaniment pattern for a single measure."""
