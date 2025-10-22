@@ -2,14 +2,16 @@
 
 import random
 from typing import List, Tuple
+from ..time_signature import TimeSignature, COMMON_TIME_SIGNATURES
 
 
 class SynthAccompanimentGenerator:
     """Generates synth accompaniment tracks for techno music."""
 
-    def __init__(self, song_structure=None, style=None):
+    def __init__(self, song_structure=None, style=None, time_signature=None):
         self.song_structure = song_structure
         self.style = style
+        self.time_signature = time_signature or COMMON_TIME_SIGNATURES["4/4"]
 
     def _get_chord_notes(self, context: dict, enrichment: str = "auto") -> List[int]:
         """Build chord notes from harmonic context with optional enrichment.
@@ -94,7 +96,7 @@ class SynthAccompanimentGenerator:
         events = []
 
         # Calculate timing
-        beats_per_measure = 4
+        beats_per_measure = self.time_signature.beats_per_measure
         current_time = 0.0
         beat_duration = 60.0 / tempo
 

@@ -2,14 +2,16 @@
 
 import random
 from typing import List, Tuple, Dict
+from ..time_signature import TimeSignature, COMMON_TIME_SIGNATURES
 
 
 class BasslineGenerator:
     """Generates diverse bassline tracks with multiple riffs and dynamic velocity."""
     
-    def __init__(self, song_structure=None, style=None):
+    def __init__(self, song_structure=None, style=None, time_signature=None):
         self.song_structure = song_structure
         self.style = style
+        self.time_signature = time_signature or COMMON_TIME_SIGNATURES["4/4"]
         self.riff_library = self._create_riff_library()
         self.current_riff = None
         self.riff_history = []
@@ -144,7 +146,7 @@ class BasslineGenerator:
         events = []
         
         # Calculate timing
-        beats_per_measure = 4
+        beats_per_measure = self.time_signature.beats_per_measure
         sixteenth_notes_per_beat = 4
         step_duration = 60.0 / (tempo * sixteenth_notes_per_beat)
         

@@ -2,6 +2,7 @@
 
 import random
 from typing import List, Tuple
+from ..time_signature import TimeSignature, COMMON_TIME_SIGNATURES
 
 
 class RhythmGenerator:
@@ -69,9 +70,10 @@ class RhythmGenerator:
     OPEN_TRIANGLE = 81  # A5 - Open Triangle
     SHAKER = 82         # A#5 - Shaker (often mapped here in modern kits)
     
-    def __init__(self, song_structure=None, style=None, swing=0.0):
+    def __init__(self, song_structure=None, style=None, time_signature=None, swing=0.0):
         self.song_structure = song_structure
         self.style = style
+        self.time_signature = time_signature or COMMON_TIME_SIGNATURES["4/4"]
         self.swing = swing
         self.patterns = self._create_patterns()
         self.current_pattern_index = 0
@@ -141,7 +143,7 @@ class RhythmGenerator:
         swing_amount = swing if swing is not None else self.swing
 
         # Calculate timing
-        beats_per_measure = 4
+        beats_per_measure = self.time_signature.beats_per_measure
         sixteenth_notes_per_beat = 4
         steps_per_measure = beats_per_measure * sixteenth_notes_per_beat
         step_duration = 60.0 / (tempo * sixteenth_notes_per_beat)

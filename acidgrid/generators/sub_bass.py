@@ -2,14 +2,16 @@
 
 import random
 from typing import List, Tuple, Dict
+from ..time_signature import TimeSignature, COMMON_TIME_SIGNATURES
 
 
 class SubBassGenerator:
     """Generates sub-bass tracks with long, deep fundamental notes harmonically coherent with other instruments."""
 
-    def __init__(self, song_structure=None, style=None):
+    def __init__(self, song_structure=None, style=None, time_signature=None):
         self.song_structure = song_structure
         self.style = style
+        self.time_signature = time_signature or COMMON_TIME_SIGNATURES["4/4"]
 
     def _get_root_note(self, context: Dict) -> int:
         """Get root note (sub-bass range) based on harmonic context."""
@@ -54,8 +56,8 @@ class SubBassGenerator:
         """
         events = []
 
-        # Calculate timing
-        beats_per_measure = 4
+        # Calculate timing based on time signature
+        beats_per_measure = self.time_signature.beats_per_measure
         beat_duration = 60.0 / tempo
         measure_duration = beats_per_measure * beat_duration
 
@@ -147,66 +149,70 @@ class SubBassGenerator:
 
     def _create_simple_pattern(self, root: int, fifth: int) -> List[Tuple[float, float, int, int]]:
         """Create simple sub-bass pattern with long notes."""
-        patterns = [
-            # Single long note per measure
-            [(0, 4, root, 65)],
+        beats = self.time_signature.beats_per_measure
 
-            # Two notes per measure
-            [(0, 2, root, 70), (2, 2, root, 60)],
-
-            # Sustained with slight variation
-            [(0, 3.5, root, 65), (3.75, 0.25, root, 50)],
-
-            # Root and fifth
-            [(0, 2, root, 70), (2, 2, fifth, 65)],
-        ]
+        if beats == 3:
+            # 3/4 patterns
+            patterns = [
+                [(0, 3, root, 65)],  # Full measure
+                [(0, 1.5, root, 70), (1.5, 1.5, root, 60)],  # Two halves
+                [(0, 2, root, 70), (2, 1, fifth, 65)],  # Root and fifth
+            ]
+        elif beats == 5:
+            # 5/4 patterns
+            patterns = [
+                [(0, 5, root, 65)],  # Full measure
+                [(0, 3, root, 70), (3, 2, root, 60)],  # 3+2 grouping
+                [(0, 2, root, 70), (2, 3, fifth, 65)],  # 2+3 grouping
+            ]
+        elif beats == 7:
+            # 7/4 or 7/8 patterns
+            patterns = [
+                [(0, 7, root, 65)],  # Full measure
+                [(0, 2, root, 70), (2, 2, root, 65), (4, 3, fifth, 60)],  # 2+2+3
+                [(0, 3, root, 70), (3, 2, root, 65), (5, 2, fifth, 60)],  # 3+2+2
+            ]
+        else:
+            # 4/4 and other patterns (default)
+            patterns = [
+                [(0, beats, root, 65)],  # Full measure
+                [(0, beats/2, root, 70), (beats/2, beats/2, root, 60)],  # Two halves
+                [(0, beats*0.875, root, 65), (beats*0.9375, beats*0.0625, root, 50)],  # Sustained with variation
+                [(0, beats/2, root, 70), (beats/2, beats/2, fifth, 65)],  # Root and fifth
+            ]
         return random.choice(patterns)
 
     def _create_pumping_pattern(self, root: int) -> List[Tuple[float, float, int, int]]:
         """Create pumping sub-bass pattern (sidechain effect simulation)."""
-        patterns = [
-            # Pumping on every beat
-            [
-                (0, 0.75, root, 75),
-                (1, 0.75, root, 75),
-                (2, 0.75, root, 75),
-                (3, 0.75, root, 75),
-            ],
+        beats = self.time_signature.beats_per_measure
 
-            # Pumping on kicks with variation
-            [
-                (0, 0.5, root, 85),
-                (0.75, 0.25, root, 45),
-                (1, 0.5, root, 75),
-                (2, 0.5, root, 80),
-                (2.75, 0.25, root, 50),
-                (3, 0.5, root, 70),
-            ],
+        # Create pumping on each beat
+        simple_pump = [(i, 0.75, root, 75) for i in range(beats)]
 
-            # Long note with velocity automation
-            [
-                (0, 1, root, 75),
-                (1, 1, root, 60),
-                (2, 1, root, 65),
-                (3, 1, root, 55),
-            ],
-        ]
+        # Create varied pumping (works for any beat count)
+        varied_pump = []
+        for i in range(beats):
+            varied_pump.append((i, 0.5, root, 85 - i * 5))
+            if i < beats - 1:
+                varied_pump.append((i + 0.75, 0.25, root, 45))
+
+        # Long notes with velocity automation
+        velocity_pump = [(i, 1, root, 75 - i * 5) for i in range(beats)]
+
+        patterns = [simple_pump, varied_pump, velocity_pump]
         return random.choice(patterns)
 
     def _create_movement_pattern(self, root: int, fifth: int) -> List[Tuple[float, float, int, int]]:
         """Create sub-bass pattern with note movement."""
+        beats = self.time_signature.beats_per_measure
+        half = beats / 2
+
         patterns = [
             # Root to fifth movement
-            [(0, 2, root, 70), (2, 2, fifth, 65)],
-
-            # More complex movement
-            [(0, 1, root, 75), (1, 0.5, fifth, 60), (1.5, 0.5, root, 55), (2, 2, root, 70)],
-
-            # Rhythmic pattern
-            [(0, 0.5, root, 85), (0.5, 0.5, root, 50), (2, 0.5, fifth, 75), (2.5, 1.5, root, 60)],
+            [(0, half, root, 70), (half, half, fifth, 65)],
 
             # Alternating root and fifth
-            [(0, 1, root, 70), (1, 1, fifth, 65), (2, 1, root, 70), (3, 1, fifth, 65)],
+            [(i, 1, root if i % 2 == 0 else fifth, 70 - i * 2) for i in range(beats)],
         ]
         return random.choice(patterns)
 

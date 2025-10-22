@@ -22,6 +22,7 @@ from .music_styles import get_style, get_available_styles, get_style_tempo
 from .interactive import interactive_mode
 from .audio_export import AudioExporter, check_audio_export_available, show_audio_export_status
 from .presets import PresetManager, create_preset_from_args
+from .time_signature import parse_time_signature, get_available_time_signatures, COMMON_TIME_SIGNATURES
 
 
 def main():
@@ -77,6 +78,12 @@ def main():
         "--swing",
         type=float,
         help="Swing/groove amount 0.0-1.0 (0.0=straight, 0.5=triplet, 1.0=max swing). If not specified, uses style default"
+    )
+    parser.add_argument(
+        "--time-signature",
+        type=str,
+        default="4/4",
+        help="Time signature (e.g., 3/4, 4/4, 5/4, 7/8). Available: " + ", ".join(get_available_time_signatures()) + " (default: 4/4)"
     )
     parser.add_argument(
         "--interactive",
@@ -249,6 +256,14 @@ def main():
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
+    # Parse time signature
+    try:
+        time_signature = parse_time_signature(args.time_signature)
+        print(f"Time signature: {time_signature.name} ({time_signature.feel})")
+    except ValueError as e:
+        print(f"Error: {e}")
+        return
+
     # Generate track name based on style
     track_name = generate_track_name(style=style)
     print(f"Generating track: {track_name}")
@@ -257,12 +272,12 @@ def main():
     song_structure = SongStructure(args.measures, style=style)
     print(f"Song structure: {', '.join([s.name for s in song_structure.sections])}")
 
-    # Initialize generators with song structure and style
-    rhythm_gen = RhythmGenerator(song_structure, style=style, swing=swing)
-    bassline_gen = BasslineGenerator(song_structure, style=style)
-    sub_bass_gen = SubBassGenerator(song_structure, style=style)
-    synth_accomp_gen = SynthAccompanimentGenerator(song_structure, style=style)
-    synth_lead_gen = SynthLeadGenerator(song_structure, style=style)
+    # Initialize generators with song structure, style, and time signature
+    rhythm_gen = RhythmGenerator(song_structure, style=style, time_signature=time_signature, swing=swing)
+    bassline_gen = BasslineGenerator(song_structure, style=style, time_signature=time_signature)
+    sub_bass_gen = SubBassGenerator(song_structure, style=style, time_signature=time_signature)
+    synth_accomp_gen = SynthAccompanimentGenerator(song_structure, style=style, time_signature=time_signature)
+    synth_lead_gen = SynthLeadGenerator(song_structure, style=style, time_signature=time_signature)
 
     # Generate tracks
     print(f"Generating {args.measures} measures at {tempo} BPM...")
