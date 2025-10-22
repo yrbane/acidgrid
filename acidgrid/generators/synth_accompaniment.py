@@ -11,24 +11,62 @@ class SynthAccompanimentGenerator:
         self.song_structure = song_structure
         self.style = style
 
-    def _get_chord_notes(self, context: dict) -> List[int]:
-        """Build chord notes from harmonic context."""
+    def _get_chord_notes(self, context: dict, enrichment: str = "auto") -> List[int]:
+        """Build chord notes from harmonic context with optional enrichment.
+
+        Args:
+            context: Harmonic context with key, scale, chord
+            enrichment: Type of chord enrichment:
+                - "auto": Randomly choose enrichment
+                - "triad": Basic 3-note chord
+                - "7th": Add 7th
+                - "9th": Add 7th and 9th
+                - "sus2": Replace 3rd with 2nd
+                - "sus4": Replace 3rd with 4th
+                - "add9": Triad + 9th (no 7th)
+        """
         scale = context.get("scale", [57, 59, 60, 62, 64, 65, 67, 69, 71, 72])
         chord_name = context.get("chord", "i")
 
         # Map chord symbols to scale degrees (0-indexed)
+        # Base triads
         chord_patterns = {
             "i": [0, 2, 4],      # root, minor 3rd, 5th (e.g., Am: A, C, E)
             "ii": [1, 3, 5],     # supertonic minor
             "III": [2, 4, 6],    # mediant major
             "iv": [3, 5, 7],     # subdominant minor
-            "V": [4, 6, 1],      # dominant major (special: uses next octave for 7th)
+            "V": [4, 6, 1],      # dominant major
             "VI": [5, 7, 2],     # submediant major
             "VII": [6, 1, 3],    # leading tone diminished
             "bVII": [5, 7, 2],   # subtonic major (flat 7)
         }
 
-        pattern = chord_patterns.get(chord_name, [0, 2, 4])
+        pattern = list(chord_patterns.get(chord_name, [0, 2, 4]))
+
+        # Auto-select enrichment with weighted probability
+        if enrichment == "auto":
+            enrichment = random.choices(
+                ["triad", "7th", "9th", "sus2", "sus4", "add9"],
+                weights=[0.3, 0.25, 0.15, 0.1, 0.1, 0.1]  # Favor triads and 7ths
+            )[0]
+
+        # Apply enrichment
+        if enrichment == "7th":
+            # Add 7th degree (6 steps above root)
+            pattern.append((pattern[0] + 6) % len(scale))
+        elif enrichment == "9th":
+            # Add 7th and 9th
+            pattern.append((pattern[0] + 6) % len(scale))
+            pattern.append((pattern[0] + 8) % len(scale))  # 9th = octave + 2nd
+        elif enrichment == "sus2":
+            # Replace 3rd with 2nd
+            pattern[1] = (pattern[0] + 1) % len(scale)
+        elif enrichment == "sus4":
+            # Replace 3rd with 4th
+            pattern[1] = (pattern[0] + 3) % len(scale)
+        elif enrichment == "add9":
+            # Add 9th without 7th
+            pattern.append((pattern[0] + 8) % len(scale))
 
         # Build chord using scale degrees
         chord_notes = []
