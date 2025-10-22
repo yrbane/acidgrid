@@ -158,7 +158,7 @@ class SynthAccompanimentGenerator:
         for timing in stab_timings:
             if random.random() < 0.8:  # 80% chance for each stab
                 stab_time = start_time + timing * beat_duration
-                base_velocity = random.randint(35, 55)  # Beaucoup plus doux
+                base_velocity = random.randint(40, 65)  # Augmenter légèrement
                 
                 # Play chord notes simultaneously with dynamic velocity
                 for note in chord_notes:
@@ -185,7 +185,7 @@ class SynthAccompanimentGenerator:
             if random.random() < 0.7:  # 70% probability for each note
                 note_time = start_time + i * sixteenth_duration
                 note = arp_pattern[i % len(arp_pattern)]
-                base_velocity = random.randint(25, 45)  # Plus doux pour arpeggios
+                base_velocity = random.randint(30, 55)  # Augmenter arpeggios
                 
                 if self.song_structure:
                     velocity = self.song_structure.get_velocity_curve(measure, base_velocity)
@@ -203,7 +203,7 @@ class SynthAccompanimentGenerator:
         
         # Long sustained chords
         if random.random() < 0.6:  # 60% chance for sustained chord
-            base_velocity = random.randint(20, 40)  # Très doux pour sustained
+            base_velocity = random.randint(30, 50)  # Augmenter sustained
             for note in chord_notes:
                 if self.song_structure:
                     velocity = self.song_structure.get_velocity_curve(measure, base_velocity)
@@ -221,13 +221,13 @@ class SynthAccompanimentGenerator:
         # Eighth note pattern with varying velocities (simulating filter sweep)
         eighth_duration = beat_duration / 2
         
-        base_velocity = 35  # Plus doux pour filtered pattern
+        base_velocity = 45  # Augmenter filtered pattern
         for i in range(8):  # 8 eighth notes
             if random.random() < 0.8:
                 note_time = start_time + i * eighth_duration
                 # Simulate filter sweep with velocity changes
                 velocity_mod = int(30 * abs(0.5 - (i / 8.0)))  # Creates sweep effect
-                base_vel = max(15, min(50, base_velocity + velocity_mod))  # Réduire plage velocity
+                base_vel = max(25, min(65, base_velocity + velocity_mod))  # Augmenter plage
                 
                 # Play random chord notes
                 selected_notes = random.sample(chord_notes, random.randint(1, 2))

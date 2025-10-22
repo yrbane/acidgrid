@@ -146,8 +146,8 @@ class SynthLeadGenerator:
                     current_note_idx = max(0, min(len(scale_notes) - 1, current_note_idx + movement))
                 
                 note = scale_notes[current_note_idx]
-                base_velocity = random.randint(95, 125)
-                
+                base_velocity = random.randint(45, 70)  # Réduire volume lead
+
                 if self.song_structure:
                     measure = int(note_time // (4 * beat_duration))
                     velocity = self.song_structure.get_velocity_curve(measure, base_velocity)
@@ -170,7 +170,7 @@ class SynthLeadGenerator:
             if random.random() < 0.7:  # 70% chance for each stab
                 note_time = start_time + pos * beat_duration
                 note = random.choice(scale_notes[3:7])  # Mid-range notes
-                velocity = random.randint(105, 127)
+                velocity = random.randint(55, 85)  # Réduire volume stabs
                 events.append((note_time, note, velocity))
         
         return events
@@ -183,13 +183,13 @@ class SynthLeadGenerator:
         # Long sustained notes
         if random.random() < 0.6:  # 60% chance for sustained note
             note = random.choice(scale_notes[4:8])  # Upper mid-range
-            velocity = random.randint(75, 100)
+            velocity = random.randint(40, 65)  # Réduire sustained
             events.append((start_time, note, velocity))
-        
+
         # Possible harmony note
         if random.random() < 0.3:  # 30% chance for harmony
             harmony_note = random.choice(scale_notes[6:])  # Higher notes
-            velocity = random.randint(55, 80)
+            velocity = random.randint(30, 50)  # Réduire harmony
             events.append((start_time + beat_duration, harmony_note, velocity))
         
         return events
@@ -218,7 +218,7 @@ class SynthLeadGenerator:
         
         for i, note in enumerate(sequence_notes):
             note_time = start_time + sequence_start + i * sixteenth_duration
-            velocity = random.randint(85, 110)
+            velocity = random.randint(45, 70)  # Réduire sequences
             events.append((note_time, note, velocity))
         
         return events

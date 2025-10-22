@@ -148,8 +148,8 @@ class BasslineGenerator:
                         events.extend(slide_notes)
                     else:
                         # Calculate velocity with dynamics
-                        base_velocity = 115  # +15 plus fort
-                        
+                        base_velocity = 80  # Réduire bassline pour équilibrer
+
                         # Apply velocity curve based on position
                         if step % 4 == 0:  # Accent on beats
                             velocity_mod = 1.1

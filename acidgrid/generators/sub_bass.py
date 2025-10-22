@@ -127,13 +127,13 @@ class SubBassGenerator:
         """Create simple sub-bass pattern with long notes."""
         patterns = [
             # Single long note per measure
-            [(0, 4, self.current_key, 90)],
-            
+            [(0, 4, self.current_key, 65)],
+
             # Two notes per measure
-            [(0, 2, self.current_key, 95), (2, 2, self.current_key, 85)],
-            
+            [(0, 2, self.current_key, 70), (2, 2, self.current_key, 60)],
+
             # Sustained with slight variation
-            [(0, 3.5, self.current_key, 90), (3.75, 0.25, self.current_key, 70)],
+            [(0, 3.5, self.current_key, 65), (3.75, 0.25, self.current_key, 50)],
         ]
         return random.choice(patterns)
     
@@ -145,28 +145,28 @@ class SubBassGenerator:
         patterns = [
             # Pumping on every beat
             [
-                (0, 0.75, base_note, 100),
-                (1, 0.75, base_note, 100),
-                (2, 0.75, base_note, 100),
-                (3, 0.75, base_note, 100),
+                (0, 0.75, base_note, 75),
+                (1, 0.75, base_note, 75),
+                (2, 0.75, base_note, 75),
+                (3, 0.75, base_note, 75),
             ],
-            
+
             # Pumping on kicks with variation
             [
-                (0, 0.5, base_note, 110),
-                (0.75, 0.25, base_note, 60),
-                (1, 0.5, base_note, 100),
-                (2, 0.5, base_note, 105),
-                (2.75, 0.25, base_note, 65),
-                (3, 0.5, base_note, 95),
+                (0, 0.5, base_note, 85),
+                (0.75, 0.25, base_note, 45),
+                (1, 0.5, base_note, 75),
+                (2, 0.5, base_note, 80),
+                (2.75, 0.25, base_note, 50),
+                (3, 0.5, base_note, 70),
             ],
-            
+
             # Long note with velocity automation
             [
-                (0, 1, base_note, 100),
-                (1, 1, base_note, 80),
-                (2, 1, base_note, 90),
-                (3, 1, base_note, 75),
+                (0, 1, base_note, 75),
+                (1, 1, base_note, 60),
+                (2, 1, base_note, 65),
+                (3, 1, base_note, 55),
             ],
         ]
         return random.choice(patterns)
@@ -180,13 +180,13 @@ class SubBassGenerator:
         
         patterns = [
             # Root to fifth movement
-            [(0, 2, root, 95), (2, 2, fifth, 90)],
-            
+            [(0, 2, root, 70), (2, 2, fifth, 65)],
+
             # More complex movement
-            [(0, 1, root, 100), (1, 0.5, fifth, 85), (1.5, 0.5, root, 80), (2, 2, root, 95)],
-            
+            [(0, 1, root, 75), (1, 0.5, fifth, 60), (1.5, 0.5, root, 55), (2, 2, root, 70)],
+
             # Rhythmic pattern
-            [(0, 0.5, root, 110), (0.5, 0.5, root, 70), (2, 0.5, fifth, 100), (2.5, 1.5, root, 85)],
+            [(0, 0.5, root, 85), (0.5, 0.5, root, 50), (2, 0.5, fifth, 75), (2.5, 1.5, root, 60)],
         ]
         return random.choice(patterns)
     
@@ -194,13 +194,13 @@ class SubBassGenerator:
         """Create sparse sub-bass pattern for breakdowns."""
         patterns = [
             # Single hit
-            [(0, 1, self.current_key, 85)],
-            
+            [(0, 1, self.current_key, 60)],
+
             # Two sparse hits
-            [(0, 0.5, self.current_key, 90), (3, 1, self.current_key, 80)],
-            
+            [(0, 0.5, self.current_key, 65), (3, 1, self.current_key, 55)],
+
             # Very long sustain
-            [(0, 8, self.current_key, 70)],  # Extends beyond measure
+            [(0, 8, self.current_key, 50)],  # Extends beyond measure
         ]
         return random.choice(patterns)
     
